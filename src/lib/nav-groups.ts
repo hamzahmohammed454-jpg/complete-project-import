@@ -126,6 +126,7 @@ export const NAV_GROUPS = [
       { to: "/activity", label: "سجل العمليات", icon: History, tone: "gold", section: "أدوات النظام" },
       { to: "/auto-reply", label: "الرد الآلي", icon: MessageSquare, tone: "teal", section: "أدوات النظام" },
       { to: "/wa-bot", label: "بوت واتساب", icon: MessageSquare, tone: "mint", section: "أدوات النظام" },
+      { to: "/wa-chats", label: "محادثات واتساب", icon: MessageSquare, tone: "teal", section: "أدوات النظام" },
       { to: "/news", label: "أخبار الموظفين", icon: Megaphone, tone: "gold", section: "أدوات النظام" },
       { to: "/license", label: "التجربة والتفعيل", icon: LockKeyhole, tone: "gold", section: "أدوات النظام" },
     ],

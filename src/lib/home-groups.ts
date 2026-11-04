@@ -128,6 +128,8 @@ export const GROUPS: Group[] = [
     img: "assistant",
     tiles: [
       { to: "/whatsapp", label: "واتساب", img: "whatsapp" },
+      { to: "/wa-bot", label: "بوت واتساب", img: "wa-bot" },
+      { to: "/wa-chats", label: "محادثات واتساب", img: "wa-chats" },
       { to: "/auto-reply", label: "الرد الآلي", img: "autoreply" },
       { to: "/assistant", label: "المساعد الآلي", img: "assistant" },
       { to: "/news", label: "الأخبار", img: "news" },

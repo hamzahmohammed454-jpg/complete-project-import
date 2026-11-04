@@ -68,6 +68,7 @@ import { Route as AuthenticatedTransfersRouteImport } from './routes/_authentica
 import { Route as AuthenticatedVoucherDesignRouteImport } from './routes/_authenticated/voucher-design'
 import { Route as AuthenticatedVouchersRouteImport } from './routes/_authenticated/vouchers'
 import { Route as AuthenticatedWaBotRouteImport } from './routes/_authenticated/wa-bot'
+import { Route as AuthenticatedWaChatsRouteImport } from './routes/_authenticated/wa-chats'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
 import { Route as AuthenticatedWithdrawalRequestsRouteImport } from './routes/_authenticated/withdrawal-requests'
 import { Route as AuthenticatedSectionIdRouteImport } from './routes/_authenticated/section.$id'
@@ -386,6 +387,11 @@ const AuthenticatedWaBotRoute = AuthenticatedWaBotRouteImport.update({
   path: '/wa-bot',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWaChatsRoute = AuthenticatedWaChatsRouteImport.update({
+  id: '/wa-chats',
+  path: '/wa-chats',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWhatsappRoute = AuthenticatedWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
@@ -474,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/voucher-design': typeof AuthenticatedVoucherDesignRoute
   '/vouchers': typeof AuthenticatedVouchersRoute
   '/wa-bot': typeof AuthenticatedWaBotRoute
+  '/wa-chats': typeof AuthenticatedWaChatsRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
   '/section/$id': typeof AuthenticatedSectionIdRoute
@@ -539,6 +546,7 @@ export interface FileRoutesByTo {
   '/voucher-design': typeof AuthenticatedVoucherDesignRoute
   '/vouchers': typeof AuthenticatedVouchersRoute
   '/wa-bot': typeof AuthenticatedWaBotRoute
+  '/wa-chats': typeof AuthenticatedWaChatsRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
   '/section/$id': typeof AuthenticatedSectionIdRoute
@@ -606,6 +614,7 @@ export interface FileRoutesById {
   '/_authenticated/voucher-design': typeof AuthenticatedVoucherDesignRoute
   '/_authenticated/vouchers': typeof AuthenticatedVouchersRoute
   '/_authenticated/wa-bot': typeof AuthenticatedWaBotRoute
+  '/_authenticated/wa-chats': typeof AuthenticatedWaChatsRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/_authenticated/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
   '/_authenticated/section/$id': typeof AuthenticatedSectionIdRoute
@@ -673,6 +682,7 @@ export interface FileRouteTypes {
     | '/voucher-design'
     | '/vouchers'
     | '/wa-bot'
+    | '/wa-chats'
     | '/whatsapp'
     | '/withdrawal-requests'
     | '/section/$id'
@@ -738,6 +748,7 @@ export interface FileRouteTypes {
     | '/voucher-design'
     | '/vouchers'
     | '/wa-bot'
+    | '/wa-chats'
     | '/whatsapp'
     | '/withdrawal-requests'
     | '/section/$id'
@@ -804,6 +815,7 @@ export interface FileRouteTypes {
     | '/_authenticated/voucher-design'
     | '/_authenticated/vouchers'
     | '/_authenticated/wa-bot'
+    | '/_authenticated/wa-chats'
     | '/_authenticated/whatsapp'
     | '/_authenticated/withdrawal-requests'
     | '/_authenticated/section/$id'
@@ -1232,6 +1244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWaBotRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/wa-chats': {
+      id: '/_authenticated/wa-chats'
+      path: '/wa-chats'
+      fullPath: '/wa-chats'
+      preLoaderRoute: typeof AuthenticatedWaChatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/whatsapp': {
       id: '/_authenticated/whatsapp'
       path: '/whatsapp'
@@ -1328,6 +1347,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVoucherDesignRoute: typeof AuthenticatedVoucherDesignRoute
   AuthenticatedVouchersRoute: typeof AuthenticatedVouchersRoute
   AuthenticatedWaBotRoute: typeof AuthenticatedWaBotRoute
+  AuthenticatedWaChatsRoute: typeof AuthenticatedWaChatsRoute
   AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
   AuthenticatedWithdrawalRequestsRoute: typeof AuthenticatedWithdrawalRequestsRoute
   AuthenticatedSectionIdRoute: typeof AuthenticatedSectionIdRoute
@@ -1392,6 +1412,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVoucherDesignRoute: AuthenticatedVoucherDesignRoute,
   AuthenticatedVouchersRoute: AuthenticatedVouchersRoute,
   AuthenticatedWaBotRoute: AuthenticatedWaBotRoute,
+  AuthenticatedWaChatsRoute: AuthenticatedWaChatsRoute,
   AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
   AuthenticatedWithdrawalRequestsRoute: AuthenticatedWithdrawalRequestsRoute,
   AuthenticatedSectionIdRoute: AuthenticatedSectionIdRoute,
