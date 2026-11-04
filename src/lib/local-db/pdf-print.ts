@@ -29,7 +29,7 @@ export async function makePagePdf(): Promise<Blob> {
     scale: 2,
     backgroundColor: "#ffffff",
     useCORS: true,
-    windowWidth: Math.max(el.scrollWidth, 360),
+    windowWidth: Math.max(el.scrollWidth, 800),
     // Lay the copy out at paper width so wide tables are not cut off at the phone's edge.
     onclone: (_doc, copy) => {
       copy.style.width = "760px";
