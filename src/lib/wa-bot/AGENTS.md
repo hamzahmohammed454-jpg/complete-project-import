@@ -1,0 +1,4 @@
+# WhatsApp bot — rules
+- The WhatsApp bot (`src/lib/wa-bot/`, receiver at `/api/public/whatsapp/webhook`) stores every verified delivery in `whatsapp_webhook_events` before processing, sends each reply once per `reply_key`, and only creates reviewable `wa_items`; approval never posts money, so staff still record operations through the audited screens.
+- Bot on/off switches, enabled customer request kinds and per-owner routing live in `wa_bot_settings` and `wa_contacts.notify_kinds`, evaluated by pure helpers in `src/lib/wa-bot/logic.ts`, so behavior changes without code edits.
+- Staff replies from the WhatsApp chats screen go through an authenticated server function that checks the manager role and the 24-hour customer-service window before sending once per request id, because Meta rejects free-form messages outside that window.
