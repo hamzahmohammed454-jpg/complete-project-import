@@ -30,6 +30,13 @@ export async function makePagePdf(): Promise<Blob> {
     backgroundColor: "#ffffff",
     useCORS: true,
     windowWidth: Math.max(el.scrollWidth, 360),
+    // Lay the copy out at paper width so wide tables are not cut off at the phone's edge.
+    onclone: (_doc, copy) => {
+      copy.style.width = "760px";
+      copy.style.maxWidth = "none";
+      copy.querySelectorAll<HTMLElement>(".overflow-x-auto, .overflow-hidden").forEach((n) => { n.style.overflow = "visible"; });
+      copy.querySelectorAll<HTMLElement>(".print\\:block").forEach((n) => { n.style.display = "block"; });
+    },
     ignoreElements: (n) => n instanceof HTMLElement && (n.classList.contains("print:hidden") || n.classList.contains("no-print") || n.dataset["printHide"] !== undefined),
   });
   const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
