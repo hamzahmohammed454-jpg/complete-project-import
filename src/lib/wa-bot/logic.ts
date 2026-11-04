@@ -4,9 +4,7 @@
 
 /** يوحّد الرقم إلى أرقام فقط بصيغة دولية؛ أرقام اليمن 7XXXXXXXX تصبح 9677XXXXXXXX. */
 export function normalizePhone(raw: string): string {
-  let d = (raw ?? "").replace(/[^\d]/g, "");
-  // أرقام عربية-هندية
-  d = d || (raw ?? "").replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/\D/g, "");
+  let d = (raw ?? "").replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/\D/g, "");
   if (d.startsWith("00")) d = d.slice(2);
   if (d.length === 9 && d.startsWith("7")) d = "967" + d;
   return d;
