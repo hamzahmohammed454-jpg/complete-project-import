@@ -5,7 +5,7 @@ import { screenAllowed } from "@/lib/screen-access";
 describe("Navigation organization", () => {
   it("keeps six financial groups and administration separate", () => {
     expect(PRIMARY_TABS.map((tab) => tab.to)).toEqual(["/app", "/transfers", "/exchange", "/boxes", "/accounts", "/reports"]);
-    expect(groupItems("/administration").map((item) => item.to)).toEqual(["/administration", "/staff", "/setup", "/backup", "/activity", "/auto-reply", "/news", "/license"]);
+    expect(groupItems("/administration").map((item) => item.to)).toEqual(["/administration", "/staff", "/setup", "/backup", "/activity", "/auto-reply", "/wa-bot", "/news", "/license"]);
   });
   it("assigns each screen to exactly one group", () => {
     const paths = NAV_GROUPS.flatMap((group) => group.items.map((item) => item.to));

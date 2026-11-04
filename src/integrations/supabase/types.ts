@@ -3372,6 +3372,295 @@ export type Database = {
           },
         ]
       }
+      wa_bot_settings: {
+        Row: {
+          auto_ack: boolean
+          customer_kinds: string[]
+          customers_enabled: boolean
+          enabled: boolean
+          exchangers_enabled: boolean
+          id: number
+          owners_enabled: boolean
+          paused_text: string
+          read_images: boolean
+          reply_unregistered: boolean
+          unregistered_text: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_ack?: boolean
+          customer_kinds?: string[]
+          customers_enabled?: boolean
+          enabled?: boolean
+          exchangers_enabled?: boolean
+          id?: number
+          owners_enabled?: boolean
+          paused_text?: string
+          read_images?: boolean
+          reply_unregistered?: boolean
+          unregistered_text?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_ack?: boolean
+          customer_kinds?: string[]
+          customers_enabled?: boolean
+          enabled?: boolean
+          exchangers_enabled?: boolean
+          id?: number
+          owners_enabled?: boolean
+          paused_text?: string
+          read_images?: boolean
+          reply_unregistered?: boolean
+          unregistered_text?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      wa_contacts: {
+        Row: {
+          active: boolean
+          agent_id: number | null
+          created_at: string
+          created_by: string | null
+          customer_id: number | null
+          display_name: string
+          id: number
+          notify_kinds: string[]
+          phone: string
+          role: string
+        }
+        Insert: {
+          active?: boolean
+          agent_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: number | null
+          display_name?: string
+          id?: number
+          notify_kinds?: string[]
+          phone: string
+          role: string
+        }
+        Update: {
+          active?: boolean
+          agent_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: number | null
+          display_name?: string
+          id?: number
+          notify_kinds?: string[]
+          phone?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_contacts_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_items: {
+        Row: {
+          amount: number | null
+          commission: number | null
+          contact_id: number | null
+          created_at: string
+          currency: string | null
+          data: Json
+          decided_at: string | null
+          decided_by: string | null
+          decided_via: string | null
+          duplicate_note: string | null
+          id: number
+          inbound_message_id: string
+          kind: string
+          source_role: string
+          status: string
+          summary: string
+          transfer_number: string | null
+        }
+        Insert: {
+          amount?: number | null
+          commission?: number | null
+          contact_id?: number | null
+          created_at?: string
+          currency?: string | null
+          data?: Json
+          decided_at?: string | null
+          decided_by?: string | null
+          decided_via?: string | null
+          duplicate_note?: string | null
+          id?: number
+          inbound_message_id: string
+          kind: string
+          source_role: string
+          status?: string
+          summary?: string
+          transfer_number?: string | null
+        }
+        Update: {
+          amount?: number | null
+          commission?: number | null
+          contact_id?: number | null
+          created_at?: string
+          currency?: string | null
+          data?: Json
+          decided_at?: string | null
+          decided_by?: string | null
+          decided_via?: string | null
+          duplicate_note?: string | null
+          id?: number
+          inbound_message_id?: string
+          kind?: string
+          source_role?: string
+          status?: string
+          summary?: string
+          transfer_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_items_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "wa_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_message_statuses: {
+        Row: {
+          errors: Json | null
+          id: number
+          provider_ts: string | null
+          recipient: string | null
+          status: string
+          wa_message_id: string
+        }
+        Insert: {
+          errors?: Json | null
+          id?: number
+          provider_ts?: string | null
+          recipient?: string | null
+          status: string
+          wa_message_id: string
+        }
+        Update: {
+          errors?: Json | null
+          id?: number
+          provider_ts?: string | null
+          recipient?: string | null
+          status?: string
+          wa_message_id?: string
+        }
+        Relationships: []
+      }
+      wa_messages: {
+        Row: {
+          body: string
+          contact_id: number | null
+          created_at: string
+          direction: string
+          id: number
+          media_id: string | null
+          msg_type: string
+          phone: string
+          provider_ts: string | null
+          reply_key: string | null
+          send_error: string | null
+          send_state: string | null
+          wa_message_id: string | null
+        }
+        Insert: {
+          body?: string
+          contact_id?: number | null
+          created_at?: string
+          direction: string
+          id?: number
+          media_id?: string | null
+          msg_type?: string
+          phone: string
+          provider_ts?: string | null
+          reply_key?: string | null
+          send_error?: string | null
+          send_state?: string | null
+          wa_message_id?: string | null
+        }
+        Update: {
+          body?: string
+          contact_id?: number | null
+          created_at?: string
+          direction?: string
+          id?: number
+          media_id?: string | null
+          msg_type?: string
+          phone?: string
+          provider_ts?: string | null
+          reply_key?: string | null
+          send_error?: string | null
+          send_state?: string | null
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "wa_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_webhook_events: {
+        Row: {
+          attempts: number
+          delivery_id: string
+          event: string
+          id: number
+          next_attempt_at: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          received_at: string
+        }
+        Insert: {
+          attempts?: number
+          delivery_id: string
+          event: string
+          id?: number
+          next_attempt_at?: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+        }
+        Update: {
+          attempts?: number
+          delivery_id?: string
+          event?: string
+          id?: number
+          next_attempt_at?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       withdrawal_requests: {
         Row: {
           amount: number
