@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { coerceAnalysis, needsOwnerApproval, normalizePhone, parseOwnerCommand } from "./logic";
+import { botGate, coerceAnalysis, customerKindAllowed, needsOwnerApproval, normalizePhone, parseOwnerCommand, routeToOwners } from "./logic";
 
 describe("normalizePhone", () => {
   it("adds Yemen code to local mobile numbers", () => {
@@ -44,5 +44,28 @@ describe("needsOwnerApproval", () => {
     expect(needsOwnerApproval("transfer_notice", true)).toBe(false);
     expect(needsOwnerApproval("withdrawal", false)).toBe(true);
     expect(needsOwnerApproval("other", false)).toBe(false);
+  });
+});
+
+const base = { enabled: true, exchangers_enabled: true, customers_enabled: true, owners_enabled: true, customer_kinds: ["deposit", "withdrawal"] };
+
+describe("bot controls", () => {
+  it("global switch pauses everyone", () => {
+    expect(botGate({ ...base, enabled: false }, "owner")).toBe("paused");
+  });
+  it("disabling customers leaves exchangers working", () => {
+    const s = { ...base, customers_enabled: false };
+    expect(botGate(s, "customer")).toBe("paused");
+    expect(botGate(s, "exchanger")).toBe("ok");
+  });
+  it("customers can only send enabled request kinds", () => {
+    expect(customerKindAllowed(base, "customer", "transfer")).toBe(false);
+    expect(customerKindAllowed(base, "customer", "deposit")).toBe(true);
+    expect(customerKindAllowed(base, "exchanger", "transfer_notice")).toBe(true);
+  });
+  it("routes each kind to its assigned owners, else to all owners", () => {
+    const owners = [{ id: 1, notify_kinds: ["withdrawal"] }, { id: 2, notify_kinds: ["transfer_notice"] }];
+    expect(routeToOwners(owners, "withdrawal").map((o) => o.id)).toEqual([1]);
+    expect(routeToOwners(owners, "deposit").map((o) => o.id)).toEqual([1, 2]);
   });
 });

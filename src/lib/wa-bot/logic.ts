@@ -75,17 +75,19 @@ export type Analysis = {
 export function coerceAnalysis(raw: unknown): Analysis {
   const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 200) : null);
-  const kind = typeof o.kind === "string" && o.kind in KIND_LABELS ? o.kind : "other";
-  const amt = typeof o.amount === "number" ? o.amount : typeof o.amount === "string" ? Number(toLatinDigits(o.amount).replace(/[^\d.]/g, "")) : NaN;
-  const num = str(o.transfer_number);
+  const k = o["kind"];
+  const kind = typeof k === "string" && k in KIND_LABELS ? k : "other";
+  const rawAmt = o["amount"];
+  const amt = typeof rawAmt === "number" ? rawAmt : typeof rawAmt === "string" ? Number(toLatinDigits(rawAmt).replace(/[^\d.]/g, "")) : NaN;
+  const num = str(o["transfer_number"]);
   return {
     kind,
-    summary: str(o.summary) ?? "",
+    summary: str(o["summary"]) ?? "",
     transfer_number: num ? toLatinDigits(num).replace(/\s+/g, "") : null,
     amount: Number.isFinite(amt) && amt > 0 ? amt : null,
-    currency: str(o.currency),
-    sender: str(o.sender),
-    receiver: str(o.receiver),
+    currency: str(o["currency"]),
+    sender: str(o["sender"]),
+    receiver: str(o["receiver"]),
   };
 }
 
@@ -94,7 +96,35 @@ export function needsOwnerApproval(kind: string, duplicate: boolean): boolean {
   return FINANCIAL_KINDS.has(kind) && !duplicate;
 }
 
-export function itemLine(i: { id: number; kind: string; summary: string; amount: number | null; currency: string | null; name?: string | null }): string {
+export function itemLine(i: { id: number; kind: string; summary: string; amount: number | null; currency: string | null; name?: string | null | undefined }): string {
   const amount = i.amount ? ` — ${i.amount.toLocaleString("en-US")} ${i.currency ?? ""}`.trimEnd() : "";
   return `#${i.id} ${KIND_LABELS[i.kind] ?? i.kind}${i.name ? ` (${i.name})` : ""}${amount}${i.summary ? `\n   ${i.summary}` : ""}`;
+}
+
+export type BotSettings = {
+  enabled: boolean;
+  exchangers_enabled: boolean;
+  customers_enabled: boolean;
+  owners_enabled: boolean;
+  customer_kinds: readonly string[];
+};
+
+/** هل يتعامل البوت مع رسالة من هذه الفئة؟ «paused» = نرد برسالة الإيقاف ولا نعالج. */
+export function botGate(s: BotSettings, role: string): "ok" | "paused" {
+  if (!s.enabled) return "paused";
+  if (role === "owner") return s.owners_enabled ? "ok" : "paused";
+  if (role === "exchanger") return s.exchangers_enabled ? "ok" : "paused";
+  if (role === "customer") return s.customers_enabled ? "ok" : "paused";
+  return "paused";
+}
+
+/** هل نوع طلب العميل مسموح؟ إشعارات الصرافين لا تتأثر بهذه القائمة. */
+export function customerKindAllowed(s: BotSettings, role: string, kind: string): boolean {
+  return role !== "customer" || !FINANCIAL_KINDS.has(kind) || s.customer_kinds.includes(kind);
+}
+
+/** أرقام المالك التي يُوجَّه إليها نوع الطلب؛ إن لم يُخصَّص لأحد نرسل لكل المالكين حتى لا يضيع الطلب. */
+export function routeToOwners<T extends { notify_kinds: readonly string[] }>(owners: readonly T[], kind: string): T[] {
+  const matched = owners.filter((o) => o.notify_kinds.includes(kind));
+  return matched.length ? matched : [...owners];
 }
