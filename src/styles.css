@@ -424,6 +424,13 @@ html[data-voucher-bold="true"] .voucher-paper * { font-weight: 700; }
 
 /* Account statement view: compact type so more columns/rows fit on a phone. */
 .statement-compact table { font-size: 11px; }
-.statement-compact th { font-size: 10px; padding-block: 0.35rem; }
-.statement-compact td { padding-block: 0.2rem; }
+.statement-compact th { font-size: 10px; padding-block: 0.35rem; text-align: center; }
+.statement-compact td { padding-block: 0.25rem; vertical-align: top; }
 .statement-compact td .text-\[10px\] { font-size: 9px; }
+/* البيان يأخذ ما تبقى من العرض ويلتف، والأرقام لا تنقسم، فيتسع الكشف لشاشة الأندرويد دون تمرير جانبي. */
+.statement-compact td.statement-desc { min-width: 6.5rem; white-space: normal; }
+.statement-compact td.ledger-figures { white-space: nowrap; }
+@media (max-width: 420px) {
+  .statement-compact table { font-size: 10.5px; }
+  .statement-compact th, .statement-compact td { padding-inline: 0.25rem; }
+}

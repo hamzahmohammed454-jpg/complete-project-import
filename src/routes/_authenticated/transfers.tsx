@@ -103,6 +103,21 @@ function TransfersScreen() {
 
   const rows = data.filter((t) => (!from || t.the_date >= from) && (!until || t.the_date <= until) && (!search || `${documentNumber(dir, t.document_number)} ${t.transfer_number ?? t.id} ${t.reference_number ?? ""} ${t.sender_name} ${t.receiver_name}`.includes(search)));
   const selected = rows.find((t) => t.id === sel) ?? null;
+  const qc = useQueryClient();
+  // حذف الحوالة الصادرة من شريط الأوامر: نفس شروط زر «حذف» تحت الحوالة المحددة
+  const toolbarDelete = dir === "outgoing" && permissions.can("delete") && canOperate && (!selected || (!selected.delivered && !selected.exported_at && !("check_id" in selected && selected.check_id)));
+  const removeSelected = useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.rpc("delete_outgoing_transfer", { p_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("حُذفت الحوالة");
+      setSel(null);
+      for (const key of ["outgoing_transfers", "incoming_transfers", "home", "totals", "box_day_summary", "statement", "all_accounts"]) qc.invalidateQueries({ queryKey: [key] });
+    },
+    onError: (e) => toast.error(boxErrorMessage(e)),
+  });
   const methodName = (m: string | null) => (m === "account" ? "حساب" : m === "check" ? "شيك" : "نقد");
 
   return (
@@ -112,11 +127,11 @@ function TransfersScreen() {
       <DocumentToolbar
         selected={sel != null}
         canCreate={canCreate}
-        canDelete={false}
+        canDelete={toolbarDelete && !removeSelected.isPending}
         canPrint={permissions.can("print")}
         adding={open && canCreate}
         onAdd={() => setOpen((v) => !v)}
-        onDelete={() => undefined}
+        onDelete={() => { if (selected) removeSelected.mutate(selected.id); }}
         onEdit={() => toast.info("الحوالة المرحّلة لا تُعدّل؛ استخدم «إلغاء» من أزرار الحوالة ثم أعد إدخالها.")}
         onRefresh={() => { void refetch(); toast.success("تم التحديث"); }}
         onSearch={() => document.getElementById("transfer-search")?.focus()}

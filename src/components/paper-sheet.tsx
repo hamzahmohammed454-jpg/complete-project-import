@@ -10,12 +10,12 @@ export function PaperHeader() {
   return (
     <header className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 pb-3">
       <div className="text-start">
-        <p className="brand-title text-xl">ابو طه للصرافة</p>
+        <p className="brand-title text-lg sm:text-xl">ابو طه للصرافة</p>
         <p className="text-[11px] font-semibold text-muted-foreground">للصرافة والتحويلات المالية</p>
       </div>
-      <img src={exchangeEmblem} alt="شعار ابو طه للصرافة" width={1024} height={1024} loading="lazy" className="size-16 object-contain drop-shadow-md" />
+      <img src={exchangeEmblem} alt="شعار ابو طه للصرافة" width={1024} height={1024} loading="lazy" className="size-12 object-contain drop-shadow-md sm:size-16" />
       <div className="text-end" dir="ltr">
-        <p className="text-base font-extrabold">Abu Taha Exchange</p>
+        <p className="text-sm font-extrabold sm:text-base">Abu Taha Exchange</p>
         <p className="text-[11px] font-semibold text-muted-foreground">Exchange & Transfers</p>
       </div>
     </header>

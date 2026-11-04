@@ -432,7 +432,7 @@ function SingleAccount({ accounts, groupId }: { accounts: GroupAccount[]; groupI
             {reportType === "detailed" && <CheckOption label="مع رصيد تفصيلي" checked={showRunning} onChange={setShowRunning} />}
           </div>
 
-          <div className="voucher printable voucher-paper relative overflow-hidden bg-paper p-4">
+          <div className="voucher printable voucher-paper relative overflow-hidden bg-paper p-2 sm:p-4">
             <PaperWatermark />
             <PaperHeader />
             <div className="mb-3 flex items-start justify-between gap-2">
@@ -487,22 +487,22 @@ function SingleAccount({ accounts, groupId }: { accounts: GroupAccount[]; groupI
                       <Td money align="end">{fmt(0)}</Td>
                       {showRunning && (
                         <Td money align="end">
-                          {fmt(Math.abs(opening))} <span className="text-[10px] text-muted-foreground">{balanceLabel(opening)}</span>
+                          {fmt(Math.abs(opening))}<span className="block text-[10px] font-normal text-muted-foreground">{balanceLabel(opening)}</span>
                         </Td>
                       )}
                     </Tr>
                   )}
                   {displayRows.map((r, idx) => (
                     <Tr key={idx}>
-                      <Td className="max-w-[10rem]">
-                        <p className="truncate">{r.description}</p>
+                      <Td className="statement-desc">
+                        <p className="line-clamp-2 break-words leading-snug">{r.description}</p>
                         <p className="ledger-figures text-[10px] text-muted-foreground">{r.date}</p>
                       </Td>
-                      <Td money align="end">{fmt(r.debit)}</Td>
-                      <Td money align="end">{fmt(r.credit)}</Td>
+                      <Td money align="end">{r.debit ? fmt(r.debit) : ""}</Td>
+                      <Td money align="end">{r.credit ? fmt(r.credit) : ""}</Td>
                       {showRunning && (
                         <Td money align="end" className="font-medium">
-                          {fmt(Math.abs(r.balance))} <span className="text-[10px] text-muted-foreground">{balanceLabel(r.balance)}</span>
+                          {fmt(Math.abs(r.balance))}<span className="block text-[10px] font-normal text-muted-foreground">{balanceLabel(r.balance)}</span>
                         </Td>
                       )}
                     </Tr>
@@ -628,7 +628,7 @@ function AllAccountsReport({ accounts, groupId, groupName }: { accounts: GroupAc
         />
       </div>
 
-      <div className="voucher printable voucher-paper relative overflow-hidden bg-paper p-4">
+      <div className="voucher printable voucher-paper relative overflow-hidden bg-paper p-2 sm:p-4">
         <PaperWatermark />
         <PaperHeader />
         <div className="mb-3 flex items-start justify-between gap-2">
@@ -659,8 +659,8 @@ function AllAccountsReport({ accounts, groupId, groupName }: { accounts: GroupAc
           <div className="statement-compact"><DataTable head={["الاسم", "النوع", "العملة", "مدين (لنا)", "دائن (لهم)"]}>
             {rows.map((r) => (
               <Tr key={`${r.kind}-${r.id}-${r.currency_id}`}>
-                <Td className="max-w-[10rem]">
-                  <p className="truncate font-medium">{r.name}</p>
+                <Td className="statement-desc">
+                  <p className="line-clamp-2 break-words font-medium leading-snug">{r.name}</p>
                   {r.num != null && <p className="ledger-figures text-[10px] text-muted-foreground">{r.num}</p>}
                 </Td>
                 <Td>{r.kind === "agent" ? "وكيل" : "عميل"}</Td>

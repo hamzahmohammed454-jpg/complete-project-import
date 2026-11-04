@@ -16,9 +16,10 @@ function pdfName() {
 
 /** Picks the printable area: a paper sheet/voucher if the screen has one, otherwise the main content. */
 function target(): HTMLElement {
-  return (document.querySelector<HTMLElement>("[data-print-area], .print-sheet, .paper-sheet")
-    ?? document.querySelector<HTMLElement>("main")
-    ?? document.body);
+  // Same areas the paper print stylesheet keeps (.voucher / .printable), first one actually on screen.
+  const visible = (el: HTMLElement) => el.offsetParent !== null || el.getClientRects().length > 0;
+  const sheet = [...document.querySelectorAll<HTMLElement>("[data-print-area], .voucher, .printable")].find(visible);
+  return sheet ?? document.querySelector<HTMLElement>("main") ?? document.body;
 }
 
 export async function makePagePdf(): Promise<Blob> {
@@ -28,8 +29,19 @@ export async function makePagePdf(): Promise<Blob> {
     scale: 2,
     backgroundColor: "#ffffff",
     useCORS: true,
-    windowWidth: Math.max(el.scrollWidth, 360),
-    ignoreElements: (n) => n instanceof HTMLElement && (n.classList.contains("print:hidden") || n.dataset["printHide"] !== undefined),
+    windowWidth: Math.max(el.scrollWidth, 800),
+    // Lay the copy out at paper width so wide tables are not cut off at the phone's edge.
+    onclone: (doc, copy) => {
+      // Any letter-spacing makes the renderer draw letter by letter, which breaks joined Arabic script.
+      const fix = doc.createElement("style");
+      fix.textContent = "*{letter-spacing:normal!important;word-spacing:normal!important}";
+      doc.head.appendChild(fix);
+      copy.style.width = "760px";
+      copy.style.maxWidth = "none";
+      copy.querySelectorAll<HTMLElement>(".overflow-x-auto, .overflow-hidden").forEach((n) => { n.style.overflow = "visible"; });
+      copy.querySelectorAll<HTMLElement>(".print\\:block").forEach((n) => { n.style.display = "block"; });
+    },
+    ignoreElements: (n) => n instanceof HTMLElement && (n.classList.contains("print:hidden") || n.classList.contains("no-print") || n.dataset["printHide"] !== undefined),
   });
   const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const pageW = 210, pageH = 297, margin = 8;
