@@ -71,6 +71,7 @@ import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedWithdrawalRequestsRouteImport } from './routes/_authenticated/withdrawal-requests'
 import { Route as AuthenticatedSectionIdRouteImport } from './routes/_authenticated/section.$id'
 import { Route as AuthenticatedVoucherKindIdRouteImport } from './routes/_authenticated/voucher.$kind.$id'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -401,6 +402,12 @@ const AuthenticatedVoucherKindIdRoute =
     path: '/voucher/$kind/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp/webhook',
+    path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -464,6 +471,7 @@ export interface FileRoutesByFullPath {
   '/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
   '/section/$id': typeof AuthenticatedSectionIdRoute
   '/voucher/$kind/$id': typeof AuthenticatedVoucherKindIdRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -527,6 +535,7 @@ export interface FileRoutesByTo {
   '/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
   '/section/$id': typeof AuthenticatedSectionIdRoute
   '/voucher/$kind/$id': typeof AuthenticatedVoucherKindIdRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -592,6 +601,7 @@ export interface FileRoutesById {
   '/_authenticated/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
   '/_authenticated/section/$id': typeof AuthenticatedSectionIdRoute
   '/_authenticated/voucher/$kind/$id': typeof AuthenticatedVoucherKindIdRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/withdrawal-requests'
     | '/section/$id'
     | '/voucher/$kind/$id'
+    | '/api/public/whatsapp/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -720,6 +731,7 @@ export interface FileRouteTypes {
     | '/withdrawal-requests'
     | '/section/$id'
     | '/voucher/$kind/$id'
+    | '/api/public/whatsapp/webhook'
   id:
     | '__root__'
     | '/'
@@ -784,11 +796,13 @@ export interface FileRouteTypes {
     | '/_authenticated/withdrawal-requests'
     | '/_authenticated/section/$id'
     | '/_authenticated/voucher/$kind/$id'
+    | '/api/public/whatsapp/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1227,6 +1241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVoucherKindIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/whatsapp/webhook': {
+      id: '/api/public/whatsapp/webhook'
+      path: '/api/public/whatsapp/webhook'
+      fullPath: '/api/public/whatsapp/webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1362,6 +1383,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
