@@ -1,5 +1,62 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793371766669,
+      "tag": "0000_import_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793371766670,
+      "tag": "0001_import_records",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793371837416,
+      "tag": "0002_transfer_evidence_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793546352023,
+      "tag": "0003_inventory_and_commission_posting",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793546507266,
+      "tag": "0004_inventory_rpc_new_id_compatibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793546622516,
+      "tag": "0005_protect_financial_link_updates",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793642531072,
+      "tag": "0006_export_document_numbering",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793725977546,
+      "tag": "0007_delete_outgoing_transfer",
+      "breakpoints": true
+    }
+  ]
 }

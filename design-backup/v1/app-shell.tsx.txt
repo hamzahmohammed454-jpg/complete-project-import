@@ -1,0 +1,202 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { KeyRound, LogOut, Moon, Settings2, Sun, Menu, X, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { WorkspaceNavigation } from "@/components/workspace-navigation";
+import { useOfflineStatus } from "@/hooks/use-offline-status";
+import { StaffNews } from "@/components/staff-news";
+import { LicenseBanner } from "@/components/license-banner";
+import { SessionSecurity, QuickLock } from "@/components/session-security";
+
+import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/lib/activity";
+import { useDarkMode } from "@/hooks/use-dark-mode";
+import { useScreenAccess } from "@/hooks/use-screen-access";
+import { useScreenPermissions } from "@/hooks/use-screen-permissions";
+import { LoadingRows, Notice } from "@/components/ui-kit";
+import { accessibleTabs, groupItems, TAB_OF } from "@/lib/nav-groups";
+import { Button } from "@/components/ui/button";
+import { useAppRoles } from "@/hooks/use-app-roles";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import exchangeEmblem from "@/assets/abu-taha-emblem.png";
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  return <SessionSecurity><UnlockedAppShell>{children}</UnlockedAppShell></SessionSecurity>;
+}
+
+function UnlockedAppShell({ children }: { children: React.ReactNode }) {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [branch, setBranch] = useState("");
+  const [userLabel, setUserLabel] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const { dark, toggle } = useDarkMode();
+  const { canSee } = useScreenAccess();
+  const { isAdmin, isLoading: rolesLoading } = useAppRoles();
+  const segments = path.split("/");
+  const voucherSource = segments[2] === "incoming" || segments[2] === "outgoing" ? "/transfers" : segments[2] === "buy" || segments[2] === "sell" ? "/exchange" : segments[2] === "journal" ? "/journal" : "/vouchers";
+  const pagePermissions = useScreenPermissions(segments[1] === "voucher" ? voucherSource : "/" + (segments[1] ?? ""));
+  const licenseDenied = path === "/license" && !isAdmin;
+  const alwaysAccessible = path === "/app" || path === "/password" || path === "/sync" || (path === "/license" && isAdmin);
+  const offline = useOfflineStatus();
+  const administrationItems = groupItems("/administration").filter((item) => canSee(item.to));
+  const administrationActive = TAB_OF["/" + (path.split("/")[1] ?? "")] === "/administration";
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .select("branch_name, username, full_name")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          setBranch(data?.branch_name ?? "");
+          setUserLabel(data?.username || data?.full_name || "");
+        });
+    });
+  }, []);
+
+  // سجل النشاط: فتح كل شاشة
+  useEffect(() => {
+    logActivity("فتح شاشة", path);
+  }, [path]);
+
+  // سجل النشاط: كل نقرة على زر أو رابط
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const el = (e.target as HTMLElement | null)?.closest("button, a, [role=button]");
+      if (!el) return;
+      const label = (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 80);
+      logActivity("نقر", window.location.pathname, { label });
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
+
+  async function signOut() {
+    logActivity("تسجيل خروج");
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/", replace: true });
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="bg-brand sticky top-0 z-20 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-primary-foreground shadow-float print:hidden">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Button variant="ghost" size="icon" aria-label="فتح قائمة النظام" onClick={() => setMenuOpen(true)} className="shrink-0 text-primary-foreground lg:hidden"><Menu className="size-5" /></Button>
+            <Button variant="ghost" size="icon" aria-label={collapsed ? "توسيع القائمة" : "طي القائمة"} onClick={() => setCollapsed((value) => !value)} className="hidden shrink-0 text-primary-foreground lg:inline-flex">{collapsed ? <PanelRightOpen className="size-5" /> : <PanelRightClose className="size-5" />}</Button>
+            <img
+              src={exchangeEmblem}
+              alt=""
+              width={36}
+              height={36}
+              loading="lazy"
+              className="size-9 shrink-0 rounded-lg object-contain ring-1 ring-primary-foreground/40"
+            />
+            <div className="min-w-0 leading-tight">
+              <p className="display text-sm font-bold">ابو طه للصرافة</p>
+              <p className="text-[11px] text-primary-foreground/75">
+                {branch || "الإصدار التجريبي"}
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <Link to="/sync" aria-label="حالة الاتصال والمزامنة" className={"ledger-figures rounded-full px-2.5 py-1 text-[11px] font-semibold " + (offline.failed ? "bg-destructive text-destructive-foreground" : offline.online ? "bg-primary-foreground/15" : "bg-accent text-accent-foreground")}>
+              {offline.online ? "متصل" : "غير متصل"}{offline.items.length ? ` · ${offline.items.length} قيد المزامنة` : ""}
+            </Link>
+            <QuickLock />
+            <Button
+              variant="ghost"
+              size="icon"
+              type="button"
+              onClick={toggle}
+              aria-label={dark ? "الوضع الفاتح" : "الوضع الليلي"}
+              className="rounded-lg p-2 text-primary-foreground/80 transition-colors hover:bg-primary-foreground/15 hover:text-primary-foreground"
+            >
+              {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            </Button>
+            <DropdownMenu dir="rtl">
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="الأدوات الإدارية" title="الأدوات الإدارية" className={administrationActive ? "bg-primary-foreground/15 text-primary-foreground" : "text-primary-foreground/80 hover:bg-primary-foreground/15 hover:text-primary-foreground"}>
+                  <Settings2 className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60 bg-popover opacity-100">
+                <DropdownMenuLabel>الأدوات الإدارية</DropdownMenuLabel>
+                {administrationItems.filter((item) => item.to === "/administration").map((item) => (
+                  <DropdownMenuItem key={item.to} asChild>
+                    <Link to={item.to} aria-current={path === item.to ? "page" : undefined} className={path === item.to ? "bg-accent text-accent-foreground" : ""}>
+                      <item.icon />{item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild><Link to="/password"><KeyRound />تغيير كلمة المرور</Link></DropdownMenuItem>
+                <DropdownMenuItem onSelect={signOut}><LogOut />تسجيل الخروج</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </header>
+
+      <StaffNews />
+      <LicenseBanner />
+
+      <div className="flex flex-1">
+        <aside className={(collapsed ? "hidden" : "hidden lg:block") + " sticky top-[72px] h-[calc(100dvh-72px)] w-72 shrink-0 overflow-y-auto border-l border-border bg-card print:hidden"}>
+          <div className="border-b border-border px-6 py-4"><p className="text-sm font-bold text-primary">قائمة النظام</p><p className="mt-1 text-xs text-muted-foreground">{userLabel}</p></div>
+          <WorkspaceNavigation path={path} canSee={canSee} />
+        </aside>
+        <main className="mx-auto min-w-0 w-full max-w-md flex-1 px-4 py-5 pb-44 lg:max-w-none lg:px-8 lg:pb-8 print:max-w-none print:p-0">{path === "/license" && rolesLoading ? <LoadingRows rows={3} /> : licenseDenied ? <Notice tone="info">التفعيل وأكواد التفعيل لمدير النظام فقط.</Notice> : alwaysAccessible ? children : pagePermissions.isLoading ? <LoadingRows rows={3} /> : pagePermissions.can("view") ? children : <Notice tone="info">هذه الشاشة غير مسموحة لمجموعتك. راجع مدير النظام.</Notice>}</main>
+      </div>
+      {menuOpen && <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm lg:hidden print:hidden" onClick={() => setMenuOpen(false)}>
+        <aside role="dialog" aria-modal="true" aria-label="قائمة النظام" className="absolute inset-y-0 right-0 w-80 max-w-[88vw] overflow-y-auto border-l border-border bg-card shadow-float" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border px-4 py-3"><div className="flex min-w-0 items-center gap-2"><img src={exchangeEmblem} alt="" width={36} height={36} loading="lazy" className="size-9 shrink-0 rounded-lg" /><p className="font-bold text-primary">ابو طه للصرافة</p></div><Button autoFocus variant="ghost" size="icon" aria-label="إغلاق القائمة" onClick={() => setMenuOpen(false)}><X className="size-5" /></Button></div>
+          <WorkspaceNavigation path={path} canSee={canSee} onNavigate={() => setMenuOpen(false)} />
+        </aside>
+      </div>}
+
+      <nav aria-label="القوائم الرئيسية" className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-card/95 pb-[max(0.35rem,env(safe-area-inset-bottom))] shadow-card backdrop-blur lg:hidden print:hidden">
+        {userLabel && (
+          <p className="border-b border-border/70 py-1 text-center text-[11px] text-muted-foreground">
+            المستخدم: <span dir="ltr" className="font-semibold text-foreground">{userLabel}</span>
+          </p>
+        )}
+        <ul className="mx-auto flex max-w-md">
+          {accessibleTabs(canSee).map((tab) => {
+            const seg = "/" + (path.split("/")[1] ?? "");
+             const active = (TAB_OF[tab.to] ?? "/app") === (TAB_OF[seg] ?? "/app");
+            return (
+              <li key={tab.to} className="flex-1">
+                <Link
+                  to={tab.to}
+                  aria-current={active ? "page" : undefined}
+                  className={
+                    "flex flex-col items-center gap-1 px-0.5 py-2 text-[10px] font-medium transition-colors " +
+                    (active ? "text-primary" : "text-muted-foreground")
+                  }
+                >
+                  <span
+                    className={
+                      "rounded-full px-2.5 py-1.5 transition-all " +
+                      (active ? "bg-primary text-primary-foreground shadow-card" : "")
+                    }
+                  >
+                    <tab.icon className="size-5" strokeWidth={active ? 2.4 : 1.9} />
+                  </span>
+                  {tab.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
+  );
+}
