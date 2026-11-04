@@ -64,6 +64,13 @@
       "when": 1793803583501,
       "tag": "0008_imported_admin_password_setup",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793823491831,
+      "tag": "0009_whatsapp_bot",
+      "breakpoints": true
     }
   ]
 }
