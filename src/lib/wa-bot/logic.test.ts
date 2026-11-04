@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { botGate, coerceAnalysis, customerKindAllowed, needsOwnerApproval, normalizePhone, parseOwnerCommand, routeToOwners } from "./logic";
+import { botGate, coerceAnalysis, customerKindAllowed, needsOwnerApproval, normalizePhone, parseOwnerCommand, routeToOwners, withinServiceWindow } from "./logic";
 
 describe("normalizePhone", () => {
   it("adds Yemen code to local mobile numbers", () => {
@@ -67,5 +67,16 @@ describe("bot controls", () => {
     const owners = [{ id: 1, notify_kinds: ["withdrawal"] }, { id: 2, notify_kinds: ["transfer_notice"] }];
     expect(routeToOwners(owners, "withdrawal").map((o) => o.id)).toEqual([1]);
     expect(routeToOwners(owners, "deposit").map((o) => o.id)).toEqual([1, 2]);
+  });
+});
+
+describe("withinServiceWindow", () => {
+  const now = Date.parse("2026-11-04T20:00:00Z");
+  it("allows replies within 24 hours of the customer's last message", () => {
+    expect(withinServiceWindow("2026-11-03T21:00:00Z", now)).toBe(true);
+  });
+  it("blocks free replies after 24 hours or with no inbound message", () => {
+    expect(withinServiceWindow("2026-11-03T19:59:00Z", now)).toBe(false);
+    expect(withinServiceWindow(null, now)).toBe(false);
   });
 });

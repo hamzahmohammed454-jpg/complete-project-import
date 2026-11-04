@@ -128,3 +128,10 @@ export function routeToOwners<T extends { notify_kinds: readonly string[] }>(own
   const matched = owners.filter((o) => o.notify_kinds.includes(kind));
   return matched.length ? matched : [...owners];
 }
+
+/** واتساب يسمح بالرد الحر فقط خلال ٢٤ ساعة من آخر رسالة أرسلها العميل. */
+export function withinServiceWindow(lastInboundIso: string | null | undefined, nowMs: number): boolean {
+  if (!lastInboundIso) return false;
+  const t = Date.parse(lastInboundIso);
+  return Number.isFinite(t) && nowMs - t < 24 * 3600e3;
+}

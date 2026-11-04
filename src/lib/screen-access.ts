@@ -47,6 +47,7 @@ export const SCREENS = [
   { to: "/backup", label: "النسخ الاحتياطي" },
   { to: "/auto-reply", label: "الرد الآلي" },
   { to: "/wa-bot", label: "بوت واتساب" },
+  { to: "/wa-chats", label: "محادثات واتساب" },
   { to: "/staff", label: "الموظفون" },
   { to: "/activity", label: "سجل العمليات" },
   { to: "/setup", label: "التهيئة" },
