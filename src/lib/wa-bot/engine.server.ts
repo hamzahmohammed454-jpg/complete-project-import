@@ -25,6 +25,7 @@ function keys() {
  * (انقطاع بعد الإرسال) تبقى «غير معروفة» ولا تُرسل مجددًا تلقائيًا.
  */
 export async function sendOnce(admin: Admin, opts: { to: string; body: string; replyKey: string; contactId?: number | null }) {
+  const auth = keys(); // تحقق من الإعداد قبل حجز الرسالة حتى لا تبقى «قيد الإرسال»
   const { data: existing, error: readErr } = await admin.from("wa_messages").select("id, send_state").eq("reply_key", opts.replyKey).maybeSingle();
   if (readErr) throw readErr;
   if (existing && existing.send_state !== "failed") return; // تم أو قيد التسوية
@@ -46,7 +47,7 @@ export async function sendOnce(admin: Admin, opts: { to: string; body: string; r
   try {
     res = await fetch(`${GATEWAY_URL}/messages`, {
       method: "POST",
-      headers: { ...keys(), "Content-Type": "application/json" },
+      headers: { ...auth, "Content-Type": "application/json" },
       body: JSON.stringify({ messaging_product: "whatsapp", to: opts.to, type: "text", text: { body: opts.body.slice(0, 4000) } }),
     });
   } catch (e) {
