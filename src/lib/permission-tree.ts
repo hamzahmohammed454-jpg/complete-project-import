@@ -18,7 +18,7 @@ export const PERMISSION_TREE: readonly TreeSection[] = [
     screens: ["/accounts", "/customers", "/agents", "/boxes", "/vouchers", "/withdrawal-requests", "/journal", "/entries", "/checks", "/banks", "/check-books", "/funds-inventory", "/bank-accounts", "/cost-centers", "/loop-entries", "/financial-years", "/closing", "/period-closing", "/statement", "/reports", "/financials"],
   },
   { id: "security", label: "الأمان", screens: ["/staff", "/setup"] },
-  { id: "admin", label: "الأدوات الإدارية", screens: ["/activity", "/backup", "/auto-reply", "/license", "/system-settings"] },
+  { id: "admin", label: "الأدوات الإدارية", screens: ["/activity", "/backup", "/auto-reply", "/wa-bot", "/license", "/system-settings"] },
 ];
 
 /** شاشات لا تُمنح للمجموعات أبدًا (التفعيل للمدير فقط). */

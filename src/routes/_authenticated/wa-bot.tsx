@@ -108,7 +108,7 @@ function Items() {
         <ul className="space-y-2">
           {data.map((i) => {
             const d = i.data as { sender?: string | null; receiver?: string | null; text?: string };
-            const s = STATUS[i.status] ?? STATUS.pending!;
+            const s = STATUS[i.status] ?? { label: i.status, tone: "neutral" as const };
             return (
               <ListItem key={i.id}>
                 <div className="flex items-start justify-between gap-2">
@@ -310,7 +310,7 @@ function Messages() {
   return (
     <ul className="space-y-1.5">
       {data.map((r) => (
-        <ListItem key={r.id} className={r.direction === "out" ? "bg-primary/5" : undefined}>
+        <ListItem key={r.id} className={r.direction === "out" ? "bg-primary/5" : ""}>
           <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>{r.direction === "in" ? "وارد من" : "صادر إلى"} {r.wa_contacts?.display_name || <span dir="ltr" className="ledger-figures">+{r.phone}</span>}</span>
             <span className="ledger-figures">{new Date(r.created_at).toLocaleString("ar-YE-u-nu-latn", { dateStyle: "short", timeStyle: "short" })}</span>

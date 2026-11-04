@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateChatCompletion, GatewayError } from "@lovable.dev/ai-gateway";
 
 import type { Database } from "@/integrations/supabase/types";
-import { coerceAnalysis, itemLine, KIND_LABELS, needsOwnerApproval, normalizePhone, OWNER_HELP, parseOwnerCommand, type Analysis } from "./logic";
+import { botGate, coerceAnalysis, customerKindAllowed, itemLine, KIND_LABELS, needsOwnerApproval, normalizePhone, OWNER_HELP, parseOwnerCommand, routeToOwners, type Analysis } from "./logic";
 
 type Admin = SupabaseClient<Database>;
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/whatsapp";
@@ -133,7 +133,8 @@ async function findDuplicate(admin: Admin, num: string, selfMessageId: string): 
     .neq("status", "rejected")
     .limit(1);
   if (error) throw error;
-  if (prev?.length) return `مكرر لطلب واتساب #${prev[0].id}`;
+  const first = prev?.[0];
+  if (first) return `مكرر لطلب واتساب #${first.id}`;
   const asInt = /^\d{1,15}$/.test(num) ? Number(num) : null;
   for (const table of ["incoming_transfers", "outgoing_transfers"] as const) {
     let q = admin.from(table).select("id").limit(1);
@@ -145,8 +146,17 @@ async function findDuplicate(admin: Admin, num: string, selfMessageId: string): 
   return null;
 }
 
+type Settings = Database["public"]["Tables"]["wa_bot_settings"]["Row"];
+
+async function loadSettings(admin: Admin): Promise<Settings> {
+  const { data, error } = await admin.from("wa_bot_settings").select("*").eq("id", 1).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("wa_bot_settings row missing");
+  return data;
+}
+
 async function owners(admin: Admin) {
-  const { data, error } = await admin.from("wa_contacts").select("id, phone").eq("role", "owner").eq("active", true);
+  const { data, error } = await admin.from("wa_contacts").select("id, phone, notify_kinds").eq("role", "owner").eq("active", true);
   if (error) throw error;
   return data ?? [];
 }
@@ -163,15 +173,15 @@ async function handleOwner(admin: Admin, msg: InMsg, contact: { id: number; phon
     const { data, error } = await q;
     if (error) throw error;
     if (!data?.length) return reply(cmd.kind === "pending" ? "لا توجد طلبات معلقة." : "لا توجد طلبات خلال آخر ٢٤ ساعة.");
-    const lines = data.map((i) => itemLine({ ...i, name: i.wa_contacts?.display_name }) + (cmd.kind === "today" ? ` [${i.status}]` : ""));
+    const lines = data.map((i) => itemLine({ ...i, name: i.wa_contacts?.display_name ?? null }) + (cmd.kind === "today" ? ` [${i.status}]` : ""));
     return reply(`${cmd.kind === "pending" ? "الطلبات المعلقة" : "طلبات اليوم"}:\n${lines.join("\n")}`);
   }
   const { data: item, error } = await admin.from("wa_items").select("*, wa_contacts(id, phone, display_name)").eq("id", cmd.id).maybeSingle();
   if (error) throw error;
   if (!item) return reply(`لا يوجد طلب برقم #${cmd.id}`);
   if (cmd.kind === "details") {
-    const d = item.data as Record<string, unknown>;
-    return reply([itemLine({ ...item, name: item.wa_contacts?.display_name }), `الحالة: ${item.status}`, item.transfer_number ? `رقم الحوالة: ${item.transfer_number}` : "", d.sender ? `المرسل: ${d.sender}` : "", d.receiver ? `المستلم: ${d.receiver}` : "", item.duplicate_note ?? ""].filter(Boolean).join("\n"));
+    const d = item.data as { sender?: string | null; receiver?: string | null };
+    return reply([itemLine({ ...item, name: item.wa_contacts?.display_name ?? null }), `الحالة: ${item.status}`, item.transfer_number ? `رقم الحوالة: ${item.transfer_number}` : "", d.sender ? `المرسل: ${d.sender}` : "", d.receiver ? `المستلم: ${d.receiver}` : "", item.duplicate_note ?? ""].filter(Boolean).join("\n"));
   }
   if (item.status !== "pending") return reply(`الطلب #${item.id} سبق البت فيه (${item.status}).`);
   const approve = cmd.kind === "approve";
@@ -192,13 +202,15 @@ async function handleOwner(admin: Admin, msg: InMsg, contact: { id: number; phon
   }
 }
 
-async function handleParty(admin: Admin, msg: InMsg, contact: { id: number; phone: string; role: string; display_name: string }, text: string, mediaId: string | null) {
+async function handleParty(admin: Admin, settings: Settings, msg: InMsg, contact: { id: number; phone: string; role: string; display_name: string }, text: string, mediaId: string | null) {
   const { data: existing, error: exErr } = await admin.from("wa_items").select("id, kind, summary, amount, currency, status").eq("inbound_message_id", msg.id).maybeSingle();
   if (exErr) throw exErr;
   let item = existing;
   if (!item) {
-    const image = mediaId ? await downloadMedia(mediaId) : null;
+    const image = mediaId && settings.read_images ? await downloadMedia(mediaId) : null;
+    if (!text && !image) return; // صورة بلا نص وقراءة الصور موقوفة
     const a = await analyze(text, image?.dataUrl ?? null);
+    const kindOff = !customerKindAllowed(settings, contact.role, a.kind);
     const dup = a.transfer_number ? await findDuplicate(admin, a.transfer_number, msg.id) : null;
     const { data: ins, error } = await admin
       .from("wa_items")
@@ -213,8 +225,8 @@ async function handleParty(admin: Admin, msg: InMsg, contact: { id: number; phon
           transfer_number: a.transfer_number,
           amount: a.amount,
           currency: a.currency,
-          status: dup ? "duplicate" : a.kind === "other" ? "rejected" : "pending",
-          duplicate_note: dup ?? (a.kind === "other" ? "ليست عملية مالية" : null),
+          status: dup ? "duplicate" : a.kind === "other" || kindOff ? "rejected" : "pending",
+          duplicate_note: dup ?? (a.kind === "other" ? "ليست عملية مالية" : kindOff ? "هذا النوع من الطلبات غير مفعّل عبر واتساب" : null),
         },
         { onConflict: "inbound_message_id" },
       )
@@ -228,10 +240,12 @@ async function handleParty(admin: Admin, msg: InMsg, contact: { id: number; phon
     ? `هذه الحوالة مسجلة مسبقًا ولن تُضاف مرة أخرى.`
     : item.kind === "other"
       ? `وصلت رسالتكم، وسيتواصل معكم الموظف عند الحاجة.`
-      : `تم استلام ${KIND_LABELS[item.kind] ?? "طلبكم"} برقم ${item.id}، وهو قيد المراجعة.`;
-  await sendOnce(admin, { to: contact.phone, body: ack, replyKey: `ack:${msg.id}`, contactId: contact.id });
-  if (needsOwnerApproval(item.kind, isDup) && item.status === "pending") {
-    for (const o of await owners(admin)) {
+      : item.status === "rejected"
+        ? `هذا النوع من الطلبات غير متاح عبر واتساب حاليًا، يرجى التواصل مع المكتب.`
+        : `تم استلام ${KIND_LABELS[item.kind] ?? "طلبكم"} برقم ${item.id}، وهو قيد المراجعة.`;
+  if (settings.auto_ack || item.status === "rejected") await sendOnce(admin, { to: contact.phone, body: ack, replyKey: `ack:${msg.id}`, contactId: contact.id });
+  if (needsOwnerApproval(item.kind, isDup) && item.status === "pending" && settings.owners_enabled) {
+    for (const o of routeToOwners(await owners(admin), item.kind)) {
       await sendOnce(admin, {
         to: o.phone,
         contactId: o.id,
@@ -253,12 +267,17 @@ async function handleMessage(admin: Admin, msg: InMsg) {
     { onConflict: "wa_message_id", ignoreDuplicates: true },
   );
   if (insErr) throw insErr;
+  const settings = await loadSettings(admin);
   if (!contact) {
-    return sendOnce(admin, { to: phone, body: "رقمكم غير مسجل لدى ابو طه للصرافة. يرجى التواصل مع المكتب لتفعيل الخدمة.", replyKey: `unreg:${msg.id}` });
+    if (!settings.reply_unregistered || !settings.enabled) return;
+    return sendOnce(admin, { to: phone, body: settings.unregistered_text, replyKey: `unreg:${msg.id}` });
+  }
+  if (botGate(settings, contact.role) === "paused") {
+    return sendOnce(admin, { to: contact.phone, body: settings.paused_text, replyKey: `paused:${msg.id}`, contactId: contact.id });
   }
   if (contact.role === "owner") return handleOwner(admin, msg, contact, text);
   if (!text && !mediaId) return; // ملصق أو صوت: لا شيء نحلله
-  return handleParty(admin, msg, contact, text, mediaId);
+  return handleParty(admin, settings, msg, contact, text, mediaId);
 }
 
 type Status = { id: string; status: string; timestamp?: string; recipient_id?: string; errors?: unknown };
@@ -288,9 +307,9 @@ export async function processEvent(admin: Admin, row: { id: number; event: strin
   try {
     const value = (row.payload as { entry?: { changes?: { value?: Record<string, unknown> }[] }[] })?.entry?.[0]?.changes?.[0]?.value ?? {};
     if (row.event === "whatsapp.message") {
-      for (const m of (value.messages as InMsg[] | undefined) ?? []) await handleMessage(admin, m);
+      for (const m of (value["messages"] as InMsg[] | undefined) ?? []) await handleMessage(admin, m);
     } else if (row.event === "whatsapp.status") {
-      await handleStatuses(admin, (value.statuses as Status[] | undefined) ?? []);
+      await handleStatuses(admin, (value["statuses"] as Status[] | undefined) ?? []);
     }
     const { error } = await admin.from("whatsapp_webhook_events").update({ processed_at: new Date().toISOString(), processing_error: null }).eq("id", row.id);
     if (error) throw error;
