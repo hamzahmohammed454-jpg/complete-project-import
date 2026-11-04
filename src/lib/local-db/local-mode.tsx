@@ -5,6 +5,7 @@ import { getMeta } from "./engine";
 import { installLocalFetch, localAdminExists, localDb } from "./runtime";
 import { importSeed, parseSeed } from "./import";
 import { ensureExchangeChart } from "./chart";
+import { installPdfPrint } from "./pdf-print";
 import "./brand.css";
 // Fonts ship inside the app: the phone may never reach the internet.
 import "@fontsource/ibm-plex-sans-arabic/400.css";
@@ -25,6 +26,8 @@ if (typeof window !== "undefined") {
   Object.defineProperty(Navigator.prototype, "onLine", { configurable: true, get: () => true });
   installLocalFetch(import.meta.env["VITE_SUPABASE_URL"] as string);
   void localDb();
+  // Android's WebView ignores window.print(): every print button makes a PDF instead.
+  installPdfPrint();
   void navigator.storage?.persist?.();
 }
 

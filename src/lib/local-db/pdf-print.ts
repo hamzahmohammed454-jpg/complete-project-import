@@ -16,9 +16,10 @@ function pdfName() {
 
 /** Picks the printable area: a paper sheet/voucher if the screen has one, otherwise the main content. */
 function target(): HTMLElement {
-  return (document.querySelector<HTMLElement>("[data-print-area], .print-sheet, .paper-sheet")
-    ?? document.querySelector<HTMLElement>("main")
-    ?? document.body);
+  // Same areas the paper print stylesheet keeps (.voucher / .printable), first one actually on screen.
+  const visible = (el: HTMLElement) => el.offsetParent !== null || el.getClientRects().length > 0;
+  const sheet = [...document.querySelectorAll<HTMLElement>("[data-print-area], .voucher, .printable")].find(visible);
+  return sheet ?? document.querySelector<HTMLElement>("main") ?? document.body;
 }
 
 export async function makePagePdf(): Promise<Blob> {
@@ -29,7 +30,7 @@ export async function makePagePdf(): Promise<Blob> {
     backgroundColor: "#ffffff",
     useCORS: true,
     windowWidth: Math.max(el.scrollWidth, 360),
-    ignoreElements: (n) => n instanceof HTMLElement && (n.classList.contains("print:hidden") || n.dataset["printHide"] !== undefined),
+    ignoreElements: (n) => n instanceof HTMLElement && (n.classList.contains("print:hidden") || n.classList.contains("no-print") || n.dataset["printHide"] !== undefined),
   });
   const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const pageW = 210, pageH = 297, margin = 8;
