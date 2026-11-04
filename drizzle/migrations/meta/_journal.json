@@ -71,6 +71,13 @@
       "when": 1793823491831,
       "tag": "0009_whatsapp_bot",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793823813543,
+      "tag": "0010_wa_bot_controls",
+      "breakpoints": true
     }
   ]
 }

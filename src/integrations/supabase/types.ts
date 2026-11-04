@@ -3372,6 +3372,54 @@ export type Database = {
           },
         ]
       }
+      wa_bot_settings: {
+        Row: {
+          auto_ack: boolean
+          customer_kinds: string[]
+          customers_enabled: boolean
+          enabled: boolean
+          exchangers_enabled: boolean
+          id: number
+          owners_enabled: boolean
+          paused_text: string
+          read_images: boolean
+          reply_unregistered: boolean
+          unregistered_text: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_ack?: boolean
+          customer_kinds?: string[]
+          customers_enabled?: boolean
+          enabled?: boolean
+          exchangers_enabled?: boolean
+          id?: number
+          owners_enabled?: boolean
+          paused_text?: string
+          read_images?: boolean
+          reply_unregistered?: boolean
+          unregistered_text?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_ack?: boolean
+          customer_kinds?: string[]
+          customers_enabled?: boolean
+          enabled?: boolean
+          exchangers_enabled?: boolean
+          id?: number
+          owners_enabled?: boolean
+          paused_text?: string
+          read_images?: boolean
+          reply_unregistered?: boolean
+          unregistered_text?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       wa_contacts: {
         Row: {
           active: boolean
@@ -3381,6 +3429,7 @@ export type Database = {
           customer_id: number | null
           display_name: string
           id: number
+          notify_kinds: string[]
           phone: string
           role: string
         }
@@ -3392,6 +3441,7 @@ export type Database = {
           customer_id?: number | null
           display_name?: string
           id?: number
+          notify_kinds?: string[]
           phone: string
           role: string
         }
@@ -3403,6 +3453,7 @@ export type Database = {
           customer_id?: number | null
           display_name?: string
           id?: number
+          notify_kinds?: string[]
           phone?: string
           role?: string
         }
