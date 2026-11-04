@@ -10,33 +10,785 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedAdministrationRouteImport } from './routes/_authenticated/administration'
+import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
+import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAppStatusRouteImport } from './routes/_authenticated/app-status'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
+import { Route as AuthenticatedAutoReplyRouteImport } from './routes/_authenticated/auto-reply'
+import { Route as AuthenticatedBackupRouteImport } from './routes/_authenticated/backup'
+import { Route as AuthenticatedBankAccountsRouteImport } from './routes/_authenticated/bank-accounts'
+import { Route as AuthenticatedBanksRouteImport } from './routes/_authenticated/banks'
+import { Route as AuthenticatedBoxReportRouteImport } from './routes/_authenticated/box-report'
+import { Route as AuthenticatedBoxesRouteImport } from './routes/_authenticated/boxes'
+import { Route as AuthenticatedCashPositionRouteImport } from './routes/_authenticated/cash-position'
+import { Route as AuthenticatedCheckBooksRouteImport } from './routes/_authenticated/check-books'
+import { Route as AuthenticatedChecksRouteImport } from './routes/_authenticated/checks'
+import { Route as AuthenticatedClosingRouteImport } from './routes/_authenticated/closing'
+import { Route as AuthenticatedCommissionsRouteImport } from './routes/_authenticated/commissions'
+import { Route as AuthenticatedComputerRouteImport } from './routes/_authenticated/computer'
+import { Route as AuthenticatedContactRouteImport } from './routes/_authenticated/contact'
+import { Route as AuthenticatedCostCentersRouteImport } from './routes/_authenticated/cost-centers'
+import { Route as AuthenticatedCurrenciesRouteImport } from './routes/_authenticated/currencies'
+import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
+import { Route as AuthenticatedDailyReportRouteImport } from './routes/_authenticated/daily-report'
+import { Route as AuthenticatedEntriesRouteImport } from './routes/_authenticated/entries'
+import { Route as AuthenticatedExceptionsRouteImport } from './routes/_authenticated/exceptions'
+import { Route as AuthenticatedExchangeRouteImport } from './routes/_authenticated/exchange'
+import { Route as AuthenticatedExchangeReportsRouteImport } from './routes/_authenticated/exchange-reports'
+import { Route as AuthenticatedFinancialYearsRouteImport } from './routes/_authenticated/financial-years'
+import { Route as AuthenticatedFinancialsRouteImport } from './routes/_authenticated/financials'
+import { Route as AuthenticatedFundsInventoryRouteImport } from './routes/_authenticated/funds-inventory'
+import { Route as AuthenticatedGettingStartedRouteImport } from './routes/_authenticated/getting-started'
+import { Route as AuthenticatedJournalRouteImport } from './routes/_authenticated/journal'
+import { Route as AuthenticatedLicenseRouteImport } from './routes/_authenticated/license'
+import { Route as AuthenticatedLoopEntriesRouteImport } from './routes/_authenticated/loop-entries'
+import { Route as AuthenticatedNewsRouteImport } from './routes/_authenticated/news'
+import { Route as AuthenticatedPasswordRouteImport } from './routes/_authenticated/password'
+import { Route as AuthenticatedPeriodClosingRouteImport } from './routes/_authenticated/period-closing'
+import { Route as AuthenticatedPermissionsRouteImport } from './routes/_authenticated/permissions'
+import { Route as AuthenticatedProfitsRouteImport } from './routes/_authenticated/profits'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
+import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
+import { Route as AuthenticatedStatementRouteImport } from './routes/_authenticated/statement'
+import { Route as AuthenticatedStatisticsRouteImport } from './routes/_authenticated/statistics'
+import { Route as AuthenticatedSyncRouteImport } from './routes/_authenticated/sync'
+import { Route as AuthenticatedSystemSettingsRouteImport } from './routes/_authenticated/system-settings'
+import { Route as AuthenticatedTotalsRouteImport } from './routes/_authenticated/totals'
+import { Route as AuthenticatedTransferReportsRouteImport } from './routes/_authenticated/transfer-reports'
+import { Route as AuthenticatedTransferRequestsRouteImport } from './routes/_authenticated/transfer-requests'
+import { Route as AuthenticatedTransferSetupRouteImport } from './routes/_authenticated/transfer-setup'
+import { Route as AuthenticatedTransfersRouteImport } from './routes/_authenticated/transfers'
+import { Route as AuthenticatedVoucherDesignRouteImport } from './routes/_authenticated/voucher-design'
+import { Route as AuthenticatedVouchersRouteImport } from './routes/_authenticated/vouchers'
+import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
+import { Route as AuthenticatedWithdrawalRequestsRouteImport } from './routes/_authenticated/withdrawal-requests'
+import { Route as AuthenticatedSectionIdRouteImport } from './routes/_authenticated/section.$id'
+import { Route as AuthenticatedVoucherKindIdRouteImport } from './routes/_authenticated/voucher.$kind.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdministrationRoute =
+  AuthenticatedAdministrationRouteImport.update({
+    id: '/administration',
+    path: '/administration',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgentsRoute = AuthenticatedAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppStatusRoute = AuthenticatedAppStatusRouteImport.update({
+  id: '/app-status',
+  path: '/app-status',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAutoReplyRoute = AuthenticatedAutoReplyRouteImport.update({
+  id: '/auto-reply',
+  path: '/auto-reply',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBackupRoute = AuthenticatedBackupRouteImport.update({
+  id: '/backup',
+  path: '/backup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBankAccountsRoute =
+  AuthenticatedBankAccountsRouteImport.update({
+    id: '/bank-accounts',
+    path: '/bank-accounts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBanksRoute = AuthenticatedBanksRouteImport.update({
+  id: '/banks',
+  path: '/banks',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBoxReportRoute = AuthenticatedBoxReportRouteImport.update({
+  id: '/box-report',
+  path: '/box-report',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBoxesRoute = AuthenticatedBoxesRouteImport.update({
+  id: '/boxes',
+  path: '/boxes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCashPositionRoute =
+  AuthenticatedCashPositionRouteImport.update({
+    id: '/cash-position',
+    path: '/cash-position',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCheckBooksRoute = AuthenticatedCheckBooksRouteImport.update({
+  id: '/check-books',
+  path: '/check-books',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChecksRoute = AuthenticatedChecksRouteImport.update({
+  id: '/checks',
+  path: '/checks',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedClosingRoute = AuthenticatedClosingRouteImport.update({
+  id: '/closing',
+  path: '/closing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCommissionsRoute =
+  AuthenticatedCommissionsRouteImport.update({
+    id: '/commissions',
+    path: '/commissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedComputerRoute = AuthenticatedComputerRouteImport.update({
+  id: '/computer',
+  path: '/computer',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedContactRoute = AuthenticatedContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCostCentersRoute =
+  AuthenticatedCostCentersRouteImport.update({
+    id: '/cost-centers',
+    path: '/cost-centers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCurrenciesRoute = AuthenticatedCurrenciesRouteImport.update({
+  id: '/currencies',
+  path: '/currencies',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDailyReportRoute =
+  AuthenticatedDailyReportRouteImport.update({
+    id: '/daily-report',
+    path: '/daily-report',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEntriesRoute = AuthenticatedEntriesRouteImport.update({
+  id: '/entries',
+  path: '/entries',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExceptionsRoute = AuthenticatedExceptionsRouteImport.update({
+  id: '/exceptions',
+  path: '/exceptions',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExchangeRoute = AuthenticatedExchangeRouteImport.update({
+  id: '/exchange',
+  path: '/exchange',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExchangeReportsRoute =
+  AuthenticatedExchangeReportsRouteImport.update({
+    id: '/exchange-reports',
+    path: '/exchange-reports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFinancialYearsRoute =
+  AuthenticatedFinancialYearsRouteImport.update({
+    id: '/financial-years',
+    path: '/financial-years',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFinancialsRoute = AuthenticatedFinancialsRouteImport.update({
+  id: '/financials',
+  path: '/financials',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFundsInventoryRoute =
+  AuthenticatedFundsInventoryRouteImport.update({
+    id: '/funds-inventory',
+    path: '/funds-inventory',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGettingStartedRoute =
+  AuthenticatedGettingStartedRouteImport.update({
+    id: '/getting-started',
+    path: '/getting-started',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedJournalRoute = AuthenticatedJournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLicenseRoute = AuthenticatedLicenseRouteImport.update({
+  id: '/license',
+  path: '/license',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLoopEntriesRoute =
+  AuthenticatedLoopEntriesRouteImport.update({
+    id: '/loop-entries',
+    path: '/loop-entries',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNewsRoute = AuthenticatedNewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPasswordRoute = AuthenticatedPasswordRouteImport.update({
+  id: '/password',
+  path: '/password',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPeriodClosingRoute =
+  AuthenticatedPeriodClosingRouteImport.update({
+    id: '/period-closing',
+    path: '/period-closing',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPermissionsRoute =
+  AuthenticatedPermissionsRouteImport.update({
+    id: '/permissions',
+    path: '/permissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfitsRoute = AuthenticatedProfitsRouteImport.update({
+  id: '/profits',
+  path: '/profits',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStatementRoute = AuthenticatedStatementRouteImport.update({
+  id: '/statement',
+  path: '/statement',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStatisticsRoute = AuthenticatedStatisticsRouteImport.update({
+  id: '/statistics',
+  path: '/statistics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSyncRoute = AuthenticatedSyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSystemSettingsRoute =
+  AuthenticatedSystemSettingsRouteImport.update({
+    id: '/system-settings',
+    path: '/system-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTotalsRoute = AuthenticatedTotalsRouteImport.update({
+  id: '/totals',
+  path: '/totals',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTransferReportsRoute =
+  AuthenticatedTransferReportsRouteImport.update({
+    id: '/transfer-reports',
+    path: '/transfer-reports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTransferRequestsRoute =
+  AuthenticatedTransferRequestsRouteImport.update({
+    id: '/transfer-requests',
+    path: '/transfer-requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTransferSetupRoute =
+  AuthenticatedTransferSetupRouteImport.update({
+    id: '/transfer-setup',
+    path: '/transfer-setup',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTransfersRoute = AuthenticatedTransfersRouteImport.update({
+  id: '/transfers',
+  path: '/transfers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVoucherDesignRoute =
+  AuthenticatedVoucherDesignRouteImport.update({
+    id: '/voucher-design',
+    path: '/voucher-design',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedVouchersRoute = AuthenticatedVouchersRouteImport.update({
+  id: '/vouchers',
+  path: '/vouchers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWhatsappRoute = AuthenticatedWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWithdrawalRequestsRoute =
+  AuthenticatedWithdrawalRequestsRouteImport.update({
+    id: '/withdrawal-requests',
+    path: '/withdrawal-requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSectionIdRoute = AuthenticatedSectionIdRouteImport.update({
+  id: '/section/$id',
+  path: '/section/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVoucherKindIdRoute =
+  AuthenticatedVoucherKindIdRouteImport.update({
+    id: '/voucher/$kind/$id',
+    path: '/voucher/$kind/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accounts': typeof AuthenticatedAccountsRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/administration': typeof AuthenticatedAdministrationRoute
+  '/agents': typeof AuthenticatedAgentsRoute
+  '/alerts': typeof AuthenticatedAlertsRoute
+  '/app': typeof AuthenticatedAppRoute
+  '/app-status': typeof AuthenticatedAppStatusRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
+  '/auto-reply': typeof AuthenticatedAutoReplyRoute
+  '/backup': typeof AuthenticatedBackupRoute
+  '/bank-accounts': typeof AuthenticatedBankAccountsRoute
+  '/banks': typeof AuthenticatedBanksRoute
+  '/box-report': typeof AuthenticatedBoxReportRoute
+  '/boxes': typeof AuthenticatedBoxesRoute
+  '/cash-position': typeof AuthenticatedCashPositionRoute
+  '/check-books': typeof AuthenticatedCheckBooksRoute
+  '/checks': typeof AuthenticatedChecksRoute
+  '/closing': typeof AuthenticatedClosingRoute
+  '/commissions': typeof AuthenticatedCommissionsRoute
+  '/computer': typeof AuthenticatedComputerRoute
+  '/contact': typeof AuthenticatedContactRoute
+  '/cost-centers': typeof AuthenticatedCostCentersRoute
+  '/currencies': typeof AuthenticatedCurrenciesRoute
+  '/customers': typeof AuthenticatedCustomersRoute
+  '/daily-report': typeof AuthenticatedDailyReportRoute
+  '/entries': typeof AuthenticatedEntriesRoute
+  '/exceptions': typeof AuthenticatedExceptionsRoute
+  '/exchange': typeof AuthenticatedExchangeRoute
+  '/exchange-reports': typeof AuthenticatedExchangeReportsRoute
+  '/financial-years': typeof AuthenticatedFinancialYearsRoute
+  '/financials': typeof AuthenticatedFinancialsRoute
+  '/funds-inventory': typeof AuthenticatedFundsInventoryRoute
+  '/getting-started': typeof AuthenticatedGettingStartedRoute
+  '/journal': typeof AuthenticatedJournalRoute
+  '/license': typeof AuthenticatedLicenseRoute
+  '/loop-entries': typeof AuthenticatedLoopEntriesRoute
+  '/news': typeof AuthenticatedNewsRoute
+  '/password': typeof AuthenticatedPasswordRoute
+  '/period-closing': typeof AuthenticatedPeriodClosingRoute
+  '/permissions': typeof AuthenticatedPermissionsRoute
+  '/profits': typeof AuthenticatedProfitsRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/setup': typeof AuthenticatedSetupRoute
+  '/staff': typeof AuthenticatedStaffRoute
+  '/statement': typeof AuthenticatedStatementRoute
+  '/statistics': typeof AuthenticatedStatisticsRoute
+  '/sync': typeof AuthenticatedSyncRoute
+  '/system-settings': typeof AuthenticatedSystemSettingsRoute
+  '/totals': typeof AuthenticatedTotalsRoute
+  '/transfer-reports': typeof AuthenticatedTransferReportsRoute
+  '/transfer-requests': typeof AuthenticatedTransferRequestsRoute
+  '/transfer-setup': typeof AuthenticatedTransferSetupRoute
+  '/transfers': typeof AuthenticatedTransfersRoute
+  '/voucher-design': typeof AuthenticatedVoucherDesignRoute
+  '/vouchers': typeof AuthenticatedVouchersRoute
+  '/whatsapp': typeof AuthenticatedWhatsappRoute
+  '/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
+  '/section/$id': typeof AuthenticatedSectionIdRoute
+  '/voucher/$kind/$id': typeof AuthenticatedVoucherKindIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accounts': typeof AuthenticatedAccountsRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/administration': typeof AuthenticatedAdministrationRoute
+  '/agents': typeof AuthenticatedAgentsRoute
+  '/alerts': typeof AuthenticatedAlertsRoute
+  '/app': typeof AuthenticatedAppRoute
+  '/app-status': typeof AuthenticatedAppStatusRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
+  '/auto-reply': typeof AuthenticatedAutoReplyRoute
+  '/backup': typeof AuthenticatedBackupRoute
+  '/bank-accounts': typeof AuthenticatedBankAccountsRoute
+  '/banks': typeof AuthenticatedBanksRoute
+  '/box-report': typeof AuthenticatedBoxReportRoute
+  '/boxes': typeof AuthenticatedBoxesRoute
+  '/cash-position': typeof AuthenticatedCashPositionRoute
+  '/check-books': typeof AuthenticatedCheckBooksRoute
+  '/checks': typeof AuthenticatedChecksRoute
+  '/closing': typeof AuthenticatedClosingRoute
+  '/commissions': typeof AuthenticatedCommissionsRoute
+  '/computer': typeof AuthenticatedComputerRoute
+  '/contact': typeof AuthenticatedContactRoute
+  '/cost-centers': typeof AuthenticatedCostCentersRoute
+  '/currencies': typeof AuthenticatedCurrenciesRoute
+  '/customers': typeof AuthenticatedCustomersRoute
+  '/daily-report': typeof AuthenticatedDailyReportRoute
+  '/entries': typeof AuthenticatedEntriesRoute
+  '/exceptions': typeof AuthenticatedExceptionsRoute
+  '/exchange': typeof AuthenticatedExchangeRoute
+  '/exchange-reports': typeof AuthenticatedExchangeReportsRoute
+  '/financial-years': typeof AuthenticatedFinancialYearsRoute
+  '/financials': typeof AuthenticatedFinancialsRoute
+  '/funds-inventory': typeof AuthenticatedFundsInventoryRoute
+  '/getting-started': typeof AuthenticatedGettingStartedRoute
+  '/journal': typeof AuthenticatedJournalRoute
+  '/license': typeof AuthenticatedLicenseRoute
+  '/loop-entries': typeof AuthenticatedLoopEntriesRoute
+  '/news': typeof AuthenticatedNewsRoute
+  '/password': typeof AuthenticatedPasswordRoute
+  '/period-closing': typeof AuthenticatedPeriodClosingRoute
+  '/permissions': typeof AuthenticatedPermissionsRoute
+  '/profits': typeof AuthenticatedProfitsRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/setup': typeof AuthenticatedSetupRoute
+  '/staff': typeof AuthenticatedStaffRoute
+  '/statement': typeof AuthenticatedStatementRoute
+  '/statistics': typeof AuthenticatedStatisticsRoute
+  '/sync': typeof AuthenticatedSyncRoute
+  '/system-settings': typeof AuthenticatedSystemSettingsRoute
+  '/totals': typeof AuthenticatedTotalsRoute
+  '/transfer-reports': typeof AuthenticatedTransferReportsRoute
+  '/transfer-requests': typeof AuthenticatedTransferRequestsRoute
+  '/transfer-setup': typeof AuthenticatedTransferSetupRoute
+  '/transfers': typeof AuthenticatedTransfersRoute
+  '/voucher-design': typeof AuthenticatedVoucherDesignRoute
+  '/vouchers': typeof AuthenticatedVouchersRoute
+  '/whatsapp': typeof AuthenticatedWhatsappRoute
+  '/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
+  '/section/$id': typeof AuthenticatedSectionIdRoute
+  '/voucher/$kind/$id': typeof AuthenticatedVoucherKindIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
+  '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/administration': typeof AuthenticatedAdministrationRoute
+  '/_authenticated/agents': typeof AuthenticatedAgentsRoute
+  '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
+  '/_authenticated/app': typeof AuthenticatedAppRoute
+  '/_authenticated/app-status': typeof AuthenticatedAppStatusRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
+  '/_authenticated/auto-reply': typeof AuthenticatedAutoReplyRoute
+  '/_authenticated/backup': typeof AuthenticatedBackupRoute
+  '/_authenticated/bank-accounts': typeof AuthenticatedBankAccountsRoute
+  '/_authenticated/banks': typeof AuthenticatedBanksRoute
+  '/_authenticated/box-report': typeof AuthenticatedBoxReportRoute
+  '/_authenticated/boxes': typeof AuthenticatedBoxesRoute
+  '/_authenticated/cash-position': typeof AuthenticatedCashPositionRoute
+  '/_authenticated/check-books': typeof AuthenticatedCheckBooksRoute
+  '/_authenticated/checks': typeof AuthenticatedChecksRoute
+  '/_authenticated/closing': typeof AuthenticatedClosingRoute
+  '/_authenticated/commissions': typeof AuthenticatedCommissionsRoute
+  '/_authenticated/computer': typeof AuthenticatedComputerRoute
+  '/_authenticated/contact': typeof AuthenticatedContactRoute
+  '/_authenticated/cost-centers': typeof AuthenticatedCostCentersRoute
+  '/_authenticated/currencies': typeof AuthenticatedCurrenciesRoute
+  '/_authenticated/customers': typeof AuthenticatedCustomersRoute
+  '/_authenticated/daily-report': typeof AuthenticatedDailyReportRoute
+  '/_authenticated/entries': typeof AuthenticatedEntriesRoute
+  '/_authenticated/exceptions': typeof AuthenticatedExceptionsRoute
+  '/_authenticated/exchange': typeof AuthenticatedExchangeRoute
+  '/_authenticated/exchange-reports': typeof AuthenticatedExchangeReportsRoute
+  '/_authenticated/financial-years': typeof AuthenticatedFinancialYearsRoute
+  '/_authenticated/financials': typeof AuthenticatedFinancialsRoute
+  '/_authenticated/funds-inventory': typeof AuthenticatedFundsInventoryRoute
+  '/_authenticated/getting-started': typeof AuthenticatedGettingStartedRoute
+  '/_authenticated/journal': typeof AuthenticatedJournalRoute
+  '/_authenticated/license': typeof AuthenticatedLicenseRoute
+  '/_authenticated/loop-entries': typeof AuthenticatedLoopEntriesRoute
+  '/_authenticated/news': typeof AuthenticatedNewsRoute
+  '/_authenticated/password': typeof AuthenticatedPasswordRoute
+  '/_authenticated/period-closing': typeof AuthenticatedPeriodClosingRoute
+  '/_authenticated/permissions': typeof AuthenticatedPermissionsRoute
+  '/_authenticated/profits': typeof AuthenticatedProfitsRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/setup': typeof AuthenticatedSetupRoute
+  '/_authenticated/staff': typeof AuthenticatedStaffRoute
+  '/_authenticated/statement': typeof AuthenticatedStatementRoute
+  '/_authenticated/statistics': typeof AuthenticatedStatisticsRoute
+  '/_authenticated/sync': typeof AuthenticatedSyncRoute
+  '/_authenticated/system-settings': typeof AuthenticatedSystemSettingsRoute
+  '/_authenticated/totals': typeof AuthenticatedTotalsRoute
+  '/_authenticated/transfer-reports': typeof AuthenticatedTransferReportsRoute
+  '/_authenticated/transfer-requests': typeof AuthenticatedTransferRequestsRoute
+  '/_authenticated/transfer-setup': typeof AuthenticatedTransferSetupRoute
+  '/_authenticated/transfers': typeof AuthenticatedTransfersRoute
+  '/_authenticated/voucher-design': typeof AuthenticatedVoucherDesignRoute
+  '/_authenticated/vouchers': typeof AuthenticatedVouchersRoute
+  '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
+  '/_authenticated/withdrawal-requests': typeof AuthenticatedWithdrawalRequestsRoute
+  '/_authenticated/section/$id': typeof AuthenticatedSectionIdRoute
+  '/_authenticated/voucher/$kind/$id': typeof AuthenticatedVoucherKindIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/accounts'
+    | '/activity'
+    | '/administration'
+    | '/agents'
+    | '/alerts'
+    | '/app'
+    | '/app-status'
+    | '/assistant'
+    | '/auto-reply'
+    | '/backup'
+    | '/bank-accounts'
+    | '/banks'
+    | '/box-report'
+    | '/boxes'
+    | '/cash-position'
+    | '/check-books'
+    | '/checks'
+    | '/closing'
+    | '/commissions'
+    | '/computer'
+    | '/contact'
+    | '/cost-centers'
+    | '/currencies'
+    | '/customers'
+    | '/daily-report'
+    | '/entries'
+    | '/exceptions'
+    | '/exchange'
+    | '/exchange-reports'
+    | '/financial-years'
+    | '/financials'
+    | '/funds-inventory'
+    | '/getting-started'
+    | '/journal'
+    | '/license'
+    | '/loop-entries'
+    | '/news'
+    | '/password'
+    | '/period-closing'
+    | '/permissions'
+    | '/profits'
+    | '/reports'
+    | '/settings'
+    | '/setup'
+    | '/staff'
+    | '/statement'
+    | '/statistics'
+    | '/sync'
+    | '/system-settings'
+    | '/totals'
+    | '/transfer-reports'
+    | '/transfer-requests'
+    | '/transfer-setup'
+    | '/transfers'
+    | '/voucher-design'
+    | '/vouchers'
+    | '/whatsapp'
+    | '/withdrawal-requests'
+    | '/section/$id'
+    | '/voucher/$kind/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/accounts'
+    | '/activity'
+    | '/administration'
+    | '/agents'
+    | '/alerts'
+    | '/app'
+    | '/app-status'
+    | '/assistant'
+    | '/auto-reply'
+    | '/backup'
+    | '/bank-accounts'
+    | '/banks'
+    | '/box-report'
+    | '/boxes'
+    | '/cash-position'
+    | '/check-books'
+    | '/checks'
+    | '/closing'
+    | '/commissions'
+    | '/computer'
+    | '/contact'
+    | '/cost-centers'
+    | '/currencies'
+    | '/customers'
+    | '/daily-report'
+    | '/entries'
+    | '/exceptions'
+    | '/exchange'
+    | '/exchange-reports'
+    | '/financial-years'
+    | '/financials'
+    | '/funds-inventory'
+    | '/getting-started'
+    | '/journal'
+    | '/license'
+    | '/loop-entries'
+    | '/news'
+    | '/password'
+    | '/period-closing'
+    | '/permissions'
+    | '/profits'
+    | '/reports'
+    | '/settings'
+    | '/setup'
+    | '/staff'
+    | '/statement'
+    | '/statistics'
+    | '/sync'
+    | '/system-settings'
+    | '/totals'
+    | '/transfer-reports'
+    | '/transfer-requests'
+    | '/transfer-setup'
+    | '/transfers'
+    | '/voucher-design'
+    | '/vouchers'
+    | '/whatsapp'
+    | '/withdrawal-requests'
+    | '/section/$id'
+    | '/voucher/$kind/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/_authenticated/accounts'
+    | '/_authenticated/activity'
+    | '/_authenticated/administration'
+    | '/_authenticated/agents'
+    | '/_authenticated/alerts'
+    | '/_authenticated/app'
+    | '/_authenticated/app-status'
+    | '/_authenticated/assistant'
+    | '/_authenticated/auto-reply'
+    | '/_authenticated/backup'
+    | '/_authenticated/bank-accounts'
+    | '/_authenticated/banks'
+    | '/_authenticated/box-report'
+    | '/_authenticated/boxes'
+    | '/_authenticated/cash-position'
+    | '/_authenticated/check-books'
+    | '/_authenticated/checks'
+    | '/_authenticated/closing'
+    | '/_authenticated/commissions'
+    | '/_authenticated/computer'
+    | '/_authenticated/contact'
+    | '/_authenticated/cost-centers'
+    | '/_authenticated/currencies'
+    | '/_authenticated/customers'
+    | '/_authenticated/daily-report'
+    | '/_authenticated/entries'
+    | '/_authenticated/exceptions'
+    | '/_authenticated/exchange'
+    | '/_authenticated/exchange-reports'
+    | '/_authenticated/financial-years'
+    | '/_authenticated/financials'
+    | '/_authenticated/funds-inventory'
+    | '/_authenticated/getting-started'
+    | '/_authenticated/journal'
+    | '/_authenticated/license'
+    | '/_authenticated/loop-entries'
+    | '/_authenticated/news'
+    | '/_authenticated/password'
+    | '/_authenticated/period-closing'
+    | '/_authenticated/permissions'
+    | '/_authenticated/profits'
+    | '/_authenticated/reports'
+    | '/_authenticated/settings'
+    | '/_authenticated/setup'
+    | '/_authenticated/staff'
+    | '/_authenticated/statement'
+    | '/_authenticated/statistics'
+    | '/_authenticated/sync'
+    | '/_authenticated/system-settings'
+    | '/_authenticated/totals'
+    | '/_authenticated/transfer-reports'
+    | '/_authenticated/transfer-requests'
+    | '/_authenticated/transfer-setup'
+    | '/_authenticated/transfers'
+    | '/_authenticated/voucher-design'
+    | '/_authenticated/vouchers'
+    | '/_authenticated/whatsapp'
+    | '/_authenticated/withdrawal-requests'
+    | '/_authenticated/section/$id'
+    | '/_authenticated/voucher/$kind/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +800,568 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/accounts': {
+      id: '/_authenticated/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AuthenticatedAccountsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/administration': {
+      id: '/_authenticated/administration'
+      path: '/administration'
+      fullPath: '/administration'
+      preLoaderRoute: typeof AuthenticatedAdministrationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agents': {
+      id: '/_authenticated/agents'
+      path: '/agents'
+      fullPath: '/agents'
+      preLoaderRoute: typeof AuthenticatedAgentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/alerts': {
+      id: '/_authenticated/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app-status': {
+      id: '/_authenticated/app-status'
+      path: '/app-status'
+      fullPath: '/app-status'
+      preLoaderRoute: typeof AuthenticatedAppStatusRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/auto-reply': {
+      id: '/_authenticated/auto-reply'
+      path: '/auto-reply'
+      fullPath: '/auto-reply'
+      preLoaderRoute: typeof AuthenticatedAutoReplyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/backup': {
+      id: '/_authenticated/backup'
+      path: '/backup'
+      fullPath: '/backup'
+      preLoaderRoute: typeof AuthenticatedBackupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bank-accounts': {
+      id: '/_authenticated/bank-accounts'
+      path: '/bank-accounts'
+      fullPath: '/bank-accounts'
+      preLoaderRoute: typeof AuthenticatedBankAccountsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/banks': {
+      id: '/_authenticated/banks'
+      path: '/banks'
+      fullPath: '/banks'
+      preLoaderRoute: typeof AuthenticatedBanksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/box-report': {
+      id: '/_authenticated/box-report'
+      path: '/box-report'
+      fullPath: '/box-report'
+      preLoaderRoute: typeof AuthenticatedBoxReportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/boxes': {
+      id: '/_authenticated/boxes'
+      path: '/boxes'
+      fullPath: '/boxes'
+      preLoaderRoute: typeof AuthenticatedBoxesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cash-position': {
+      id: '/_authenticated/cash-position'
+      path: '/cash-position'
+      fullPath: '/cash-position'
+      preLoaderRoute: typeof AuthenticatedCashPositionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/check-books': {
+      id: '/_authenticated/check-books'
+      path: '/check-books'
+      fullPath: '/check-books'
+      preLoaderRoute: typeof AuthenticatedCheckBooksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/checks': {
+      id: '/_authenticated/checks'
+      path: '/checks'
+      fullPath: '/checks'
+      preLoaderRoute: typeof AuthenticatedChecksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/closing': {
+      id: '/_authenticated/closing'
+      path: '/closing'
+      fullPath: '/closing'
+      preLoaderRoute: typeof AuthenticatedClosingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/commissions': {
+      id: '/_authenticated/commissions'
+      path: '/commissions'
+      fullPath: '/commissions'
+      preLoaderRoute: typeof AuthenticatedCommissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/computer': {
+      id: '/_authenticated/computer'
+      path: '/computer'
+      fullPath: '/computer'
+      preLoaderRoute: typeof AuthenticatedComputerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/contact': {
+      id: '/_authenticated/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof AuthenticatedContactRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cost-centers': {
+      id: '/_authenticated/cost-centers'
+      path: '/cost-centers'
+      fullPath: '/cost-centers'
+      preLoaderRoute: typeof AuthenticatedCostCentersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/currencies': {
+      id: '/_authenticated/currencies'
+      path: '/currencies'
+      fullPath: '/currencies'
+      preLoaderRoute: typeof AuthenticatedCurrenciesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/customers': {
+      id: '/_authenticated/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof AuthenticatedCustomersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/daily-report': {
+      id: '/_authenticated/daily-report'
+      path: '/daily-report'
+      fullPath: '/daily-report'
+      preLoaderRoute: typeof AuthenticatedDailyReportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/entries': {
+      id: '/_authenticated/entries'
+      path: '/entries'
+      fullPath: '/entries'
+      preLoaderRoute: typeof AuthenticatedEntriesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exceptions': {
+      id: '/_authenticated/exceptions'
+      path: '/exceptions'
+      fullPath: '/exceptions'
+      preLoaderRoute: typeof AuthenticatedExceptionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exchange': {
+      id: '/_authenticated/exchange'
+      path: '/exchange'
+      fullPath: '/exchange'
+      preLoaderRoute: typeof AuthenticatedExchangeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exchange-reports': {
+      id: '/_authenticated/exchange-reports'
+      path: '/exchange-reports'
+      fullPath: '/exchange-reports'
+      preLoaderRoute: typeof AuthenticatedExchangeReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financial-years': {
+      id: '/_authenticated/financial-years'
+      path: '/financial-years'
+      fullPath: '/financial-years'
+      preLoaderRoute: typeof AuthenticatedFinancialYearsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financials': {
+      id: '/_authenticated/financials'
+      path: '/financials'
+      fullPath: '/financials'
+      preLoaderRoute: typeof AuthenticatedFinancialsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/funds-inventory': {
+      id: '/_authenticated/funds-inventory'
+      path: '/funds-inventory'
+      fullPath: '/funds-inventory'
+      preLoaderRoute: typeof AuthenticatedFundsInventoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/getting-started': {
+      id: '/_authenticated/getting-started'
+      path: '/getting-started'
+      fullPath: '/getting-started'
+      preLoaderRoute: typeof AuthenticatedGettingStartedRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/journal': {
+      id: '/_authenticated/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof AuthenticatedJournalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/license': {
+      id: '/_authenticated/license'
+      path: '/license'
+      fullPath: '/license'
+      preLoaderRoute: typeof AuthenticatedLicenseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/loop-entries': {
+      id: '/_authenticated/loop-entries'
+      path: '/loop-entries'
+      fullPath: '/loop-entries'
+      preLoaderRoute: typeof AuthenticatedLoopEntriesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/news': {
+      id: '/_authenticated/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof AuthenticatedNewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/password': {
+      id: '/_authenticated/password'
+      path: '/password'
+      fullPath: '/password'
+      preLoaderRoute: typeof AuthenticatedPasswordRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/period-closing': {
+      id: '/_authenticated/period-closing'
+      path: '/period-closing'
+      fullPath: '/period-closing'
+      preLoaderRoute: typeof AuthenticatedPeriodClosingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/permissions': {
+      id: '/_authenticated/permissions'
+      path: '/permissions'
+      fullPath: '/permissions'
+      preLoaderRoute: typeof AuthenticatedPermissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profits': {
+      id: '/_authenticated/profits'
+      path: '/profits'
+      fullPath: '/profits'
+      preLoaderRoute: typeof AuthenticatedProfitsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/setup': {
+      id: '/_authenticated/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof AuthenticatedSetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/staff': {
+      id: '/_authenticated/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof AuthenticatedStaffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/statement': {
+      id: '/_authenticated/statement'
+      path: '/statement'
+      fullPath: '/statement'
+      preLoaderRoute: typeof AuthenticatedStatementRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/statistics': {
+      id: '/_authenticated/statistics'
+      path: '/statistics'
+      fullPath: '/statistics'
+      preLoaderRoute: typeof AuthenticatedStatisticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sync': {
+      id: '/_authenticated/sync'
+      path: '/sync'
+      fullPath: '/sync'
+      preLoaderRoute: typeof AuthenticatedSyncRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/system-settings': {
+      id: '/_authenticated/system-settings'
+      path: '/system-settings'
+      fullPath: '/system-settings'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/totals': {
+      id: '/_authenticated/totals'
+      path: '/totals'
+      fullPath: '/totals'
+      preLoaderRoute: typeof AuthenticatedTotalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/transfer-reports': {
+      id: '/_authenticated/transfer-reports'
+      path: '/transfer-reports'
+      fullPath: '/transfer-reports'
+      preLoaderRoute: typeof AuthenticatedTransferReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/transfer-requests': {
+      id: '/_authenticated/transfer-requests'
+      path: '/transfer-requests'
+      fullPath: '/transfer-requests'
+      preLoaderRoute: typeof AuthenticatedTransferRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/transfer-setup': {
+      id: '/_authenticated/transfer-setup'
+      path: '/transfer-setup'
+      fullPath: '/transfer-setup'
+      preLoaderRoute: typeof AuthenticatedTransferSetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/transfers': {
+      id: '/_authenticated/transfers'
+      path: '/transfers'
+      fullPath: '/transfers'
+      preLoaderRoute: typeof AuthenticatedTransfersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/voucher-design': {
+      id: '/_authenticated/voucher-design'
+      path: '/voucher-design'
+      fullPath: '/voucher-design'
+      preLoaderRoute: typeof AuthenticatedVoucherDesignRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vouchers': {
+      id: '/_authenticated/vouchers'
+      path: '/vouchers'
+      fullPath: '/vouchers'
+      preLoaderRoute: typeof AuthenticatedVouchersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/whatsapp': {
+      id: '/_authenticated/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/whatsapp'
+      preLoaderRoute: typeof AuthenticatedWhatsappRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/withdrawal-requests': {
+      id: '/_authenticated/withdrawal-requests'
+      path: '/withdrawal-requests'
+      fullPath: '/withdrawal-requests'
+      preLoaderRoute: typeof AuthenticatedWithdrawalRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/section/$id': {
+      id: '/_authenticated/section/$id'
+      path: '/section/$id'
+      fullPath: '/section/$id'
+      preLoaderRoute: typeof AuthenticatedSectionIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/voucher/$kind/$id': {
+      id: '/_authenticated/voucher/$kind/$id'
+      path: '/voucher/$kind/$id'
+      fullPath: '/voucher/$kind/$id'
+      preLoaderRoute: typeof AuthenticatedVoucherKindIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
+  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedAdministrationRoute: typeof AuthenticatedAdministrationRoute
+  AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRoute
+  AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
+  AuthenticatedAppRoute: typeof AuthenticatedAppRoute
+  AuthenticatedAppStatusRoute: typeof AuthenticatedAppStatusRoute
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
+  AuthenticatedAutoReplyRoute: typeof AuthenticatedAutoReplyRoute
+  AuthenticatedBackupRoute: typeof AuthenticatedBackupRoute
+  AuthenticatedBankAccountsRoute: typeof AuthenticatedBankAccountsRoute
+  AuthenticatedBanksRoute: typeof AuthenticatedBanksRoute
+  AuthenticatedBoxReportRoute: typeof AuthenticatedBoxReportRoute
+  AuthenticatedBoxesRoute: typeof AuthenticatedBoxesRoute
+  AuthenticatedCashPositionRoute: typeof AuthenticatedCashPositionRoute
+  AuthenticatedCheckBooksRoute: typeof AuthenticatedCheckBooksRoute
+  AuthenticatedChecksRoute: typeof AuthenticatedChecksRoute
+  AuthenticatedClosingRoute: typeof AuthenticatedClosingRoute
+  AuthenticatedCommissionsRoute: typeof AuthenticatedCommissionsRoute
+  AuthenticatedComputerRoute: typeof AuthenticatedComputerRoute
+  AuthenticatedContactRoute: typeof AuthenticatedContactRoute
+  AuthenticatedCostCentersRoute: typeof AuthenticatedCostCentersRoute
+  AuthenticatedCurrenciesRoute: typeof AuthenticatedCurrenciesRoute
+  AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
+  AuthenticatedDailyReportRoute: typeof AuthenticatedDailyReportRoute
+  AuthenticatedEntriesRoute: typeof AuthenticatedEntriesRoute
+  AuthenticatedExceptionsRoute: typeof AuthenticatedExceptionsRoute
+  AuthenticatedExchangeRoute: typeof AuthenticatedExchangeRoute
+  AuthenticatedExchangeReportsRoute: typeof AuthenticatedExchangeReportsRoute
+  AuthenticatedFinancialYearsRoute: typeof AuthenticatedFinancialYearsRoute
+  AuthenticatedFinancialsRoute: typeof AuthenticatedFinancialsRoute
+  AuthenticatedFundsInventoryRoute: typeof AuthenticatedFundsInventoryRoute
+  AuthenticatedGettingStartedRoute: typeof AuthenticatedGettingStartedRoute
+  AuthenticatedJournalRoute: typeof AuthenticatedJournalRoute
+  AuthenticatedLicenseRoute: typeof AuthenticatedLicenseRoute
+  AuthenticatedLoopEntriesRoute: typeof AuthenticatedLoopEntriesRoute
+  AuthenticatedNewsRoute: typeof AuthenticatedNewsRoute
+  AuthenticatedPasswordRoute: typeof AuthenticatedPasswordRoute
+  AuthenticatedPeriodClosingRoute: typeof AuthenticatedPeriodClosingRoute
+  AuthenticatedPermissionsRoute: typeof AuthenticatedPermissionsRoute
+  AuthenticatedProfitsRoute: typeof AuthenticatedProfitsRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
+  AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
+  AuthenticatedStatementRoute: typeof AuthenticatedStatementRoute
+  AuthenticatedStatisticsRoute: typeof AuthenticatedStatisticsRoute
+  AuthenticatedSyncRoute: typeof AuthenticatedSyncRoute
+  AuthenticatedSystemSettingsRoute: typeof AuthenticatedSystemSettingsRoute
+  AuthenticatedTotalsRoute: typeof AuthenticatedTotalsRoute
+  AuthenticatedTransferReportsRoute: typeof AuthenticatedTransferReportsRoute
+  AuthenticatedTransferRequestsRoute: typeof AuthenticatedTransferRequestsRoute
+  AuthenticatedTransferSetupRoute: typeof AuthenticatedTransferSetupRoute
+  AuthenticatedTransfersRoute: typeof AuthenticatedTransfersRoute
+  AuthenticatedVoucherDesignRoute: typeof AuthenticatedVoucherDesignRoute
+  AuthenticatedVouchersRoute: typeof AuthenticatedVouchersRoute
+  AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
+  AuthenticatedWithdrawalRequestsRoute: typeof AuthenticatedWithdrawalRequestsRoute
+  AuthenticatedSectionIdRoute: typeof AuthenticatedSectionIdRoute
+  AuthenticatedVoucherKindIdRoute: typeof AuthenticatedVoucherKindIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
+  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedAdministrationRoute: AuthenticatedAdministrationRoute,
+  AuthenticatedAgentsRoute: AuthenticatedAgentsRoute,
+  AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
+  AuthenticatedAppRoute: AuthenticatedAppRoute,
+  AuthenticatedAppStatusRoute: AuthenticatedAppStatusRoute,
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
+  AuthenticatedAutoReplyRoute: AuthenticatedAutoReplyRoute,
+  AuthenticatedBackupRoute: AuthenticatedBackupRoute,
+  AuthenticatedBankAccountsRoute: AuthenticatedBankAccountsRoute,
+  AuthenticatedBanksRoute: AuthenticatedBanksRoute,
+  AuthenticatedBoxReportRoute: AuthenticatedBoxReportRoute,
+  AuthenticatedBoxesRoute: AuthenticatedBoxesRoute,
+  AuthenticatedCashPositionRoute: AuthenticatedCashPositionRoute,
+  AuthenticatedCheckBooksRoute: AuthenticatedCheckBooksRoute,
+  AuthenticatedChecksRoute: AuthenticatedChecksRoute,
+  AuthenticatedClosingRoute: AuthenticatedClosingRoute,
+  AuthenticatedCommissionsRoute: AuthenticatedCommissionsRoute,
+  AuthenticatedComputerRoute: AuthenticatedComputerRoute,
+  AuthenticatedContactRoute: AuthenticatedContactRoute,
+  AuthenticatedCostCentersRoute: AuthenticatedCostCentersRoute,
+  AuthenticatedCurrenciesRoute: AuthenticatedCurrenciesRoute,
+  AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
+  AuthenticatedDailyReportRoute: AuthenticatedDailyReportRoute,
+  AuthenticatedEntriesRoute: AuthenticatedEntriesRoute,
+  AuthenticatedExceptionsRoute: AuthenticatedExceptionsRoute,
+  AuthenticatedExchangeRoute: AuthenticatedExchangeRoute,
+  AuthenticatedExchangeReportsRoute: AuthenticatedExchangeReportsRoute,
+  AuthenticatedFinancialYearsRoute: AuthenticatedFinancialYearsRoute,
+  AuthenticatedFinancialsRoute: AuthenticatedFinancialsRoute,
+  AuthenticatedFundsInventoryRoute: AuthenticatedFundsInventoryRoute,
+  AuthenticatedGettingStartedRoute: AuthenticatedGettingStartedRoute,
+  AuthenticatedJournalRoute: AuthenticatedJournalRoute,
+  AuthenticatedLicenseRoute: AuthenticatedLicenseRoute,
+  AuthenticatedLoopEntriesRoute: AuthenticatedLoopEntriesRoute,
+  AuthenticatedNewsRoute: AuthenticatedNewsRoute,
+  AuthenticatedPasswordRoute: AuthenticatedPasswordRoute,
+  AuthenticatedPeriodClosingRoute: AuthenticatedPeriodClosingRoute,
+  AuthenticatedPermissionsRoute: AuthenticatedPermissionsRoute,
+  AuthenticatedProfitsRoute: AuthenticatedProfitsRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSetupRoute: AuthenticatedSetupRoute,
+  AuthenticatedStaffRoute: AuthenticatedStaffRoute,
+  AuthenticatedStatementRoute: AuthenticatedStatementRoute,
+  AuthenticatedStatisticsRoute: AuthenticatedStatisticsRoute,
+  AuthenticatedSyncRoute: AuthenticatedSyncRoute,
+  AuthenticatedSystemSettingsRoute: AuthenticatedSystemSettingsRoute,
+  AuthenticatedTotalsRoute: AuthenticatedTotalsRoute,
+  AuthenticatedTransferReportsRoute: AuthenticatedTransferReportsRoute,
+  AuthenticatedTransferRequestsRoute: AuthenticatedTransferRequestsRoute,
+  AuthenticatedTransferSetupRoute: AuthenticatedTransferSetupRoute,
+  AuthenticatedTransfersRoute: AuthenticatedTransfersRoute,
+  AuthenticatedVoucherDesignRoute: AuthenticatedVoucherDesignRoute,
+  AuthenticatedVouchersRoute: AuthenticatedVouchersRoute,
+  AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
+  AuthenticatedWithdrawalRequestsRoute: AuthenticatedWithdrawalRequestsRoute,
+  AuthenticatedSectionIdRoute: AuthenticatedSectionIdRoute,
+  AuthenticatedVoucherKindIdRoute: AuthenticatedVoucherKindIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
