@@ -17,7 +17,8 @@ function abuElyasBrand() {
       let out = code
         .replaceAll("ابو طه للصرافة والتحويلات المالية", "أبو الياس للصرافة والتحويلات المالية")
         .replaceAll("ابو طه", "أبو الياس")
-        .replaceAll("أبو طه", "أبو الياس");
+        .replaceAll("أبو طه", "أبو الياس")
+        .replaceAll("Abu Taha Exchange", "Abu Elyas Exchange");
       if (file.endsWith("/src/lib/app-prefs.ts")) out = out.replace('voucherColor: ""', 'voucherColor: "#7a1f2b"').replace('voucherShade: 0', "voucherShade: 12");
       return out === code ? null : { code: out, map: null };
     },
