@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bot, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { confirmAsk } from "@/components/confirm-dialog";
@@ -10,6 +10,8 @@ import { MenuStrip } from "@/components/menu-strip";
 import { SectionIntro } from "@/components/section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, Field, FormCard, ListItem, LoadingRows, Notice, Segments, selectCls, StatusPill } from "@/components/ui-kit";
 import { useAppRoles } from "@/hooks/use-app-roles";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/wa-bot")({
   component: WaBotScreen,
 });
 
-type Tab = "items" | "contacts" | "messages";
+type Tab = "items" | "controls" | "contacts" | "messages";
 const ROLE_LABELS: Record<string, string> = { exchanger: "صراف / وكيل", customer: "عميل", owner: "المالك" };
 const STATUS: Record<string, { label: string; tone: "neutral" | "ok" | "warn" | "bad" }> = {
   pending: { label: "معلق", tone: "warn" },
@@ -52,11 +54,13 @@ function WaBotScreen() {
         onChange={setTab}
         options={[
           { value: "items", label: "الطلبات" },
+          { value: "controls", label: "التحكم" },
           { value: "contacts", label: "الأرقام" },
           { value: "messages", label: "الرسائل" },
         ]}
       />
       {tab === "items" && <Items />}
+      {tab === "controls" && <Controls canEdit={isAdmin} />}
       {tab === "contacts" && <Contacts canEdit={isAdmin} />}
       {tab === "messages" && <Messages />}
     </>
@@ -199,6 +203,14 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
     },
     onError: (e) => toast.error(e.message),
   });
+  const route = useMutation({
+    mutationFn: async (v: { id: number; kinds: string[] }) => {
+      const { error } = await supabase.from("wa_contacts").update({ notify_kinds: v.kinds }).eq("id", v.id);
+      if (error) throw error;
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["wa-contacts-bot"] }),
+    onError: (e) => toast.error(e.message),
+  });
   const toggle = useMutation({
     mutationFn: async (v: { id: number; active: boolean }) => {
       const { error } = await supabase.from("wa_contacts").update({ active: v.active }).eq("id", v.id);
@@ -254,6 +266,7 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
         </FormCard>
       )}
       <h2 className="mb-2 mt-4 text-sm font-semibold">الأرقام المربوطة</h2>
+      <Notice className="mb-2">لكل رقم مالك اختر أنواع الطلبات التي تصله للاعتماد. النوع الذي لا يختاره أي مالك يصل لكل المالكين.</Notice>
       {contacts.isLoading ? (
         <LoadingRows rows={3} />
       ) : !contacts.data?.length ? (
@@ -267,6 +280,25 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
                 <div className="text-xs text-muted-foreground">
                   {ROLE_LABELS[c.role]} · <span dir="ltr" className="ledger-figures">+{c.phone}</span>
                 </div>
+                {c.role === "owner" && (
+                  <div className="mt-1.5 flex flex-wrap gap-1" aria-label="أنواع الطلبات الموجهة لهذا الرقم">
+                    {ROUTABLE.map((k) => {
+                      const on = c.notify_kinds.includes(k);
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          disabled={!canEdit || route.isPending}
+                          aria-pressed={on}
+                          onClick={() => route.mutate({ id: c.id, kinds: on ? c.notify_kinds.filter((x) => x !== k) : [...c.notify_kinds, k] })}
+                          className={`rounded-full border px-2 py-0.5 text-[11px] ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+                        >
+                          {KIND_LABELS[k]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-1.5">
                 <StatusPill tone={c.active ? "ok" : "neutral"}>{c.active ? "مفعّل" : "موقوف"}</StatusPill>
@@ -325,5 +357,100 @@ function Messages() {
         </ListItem>
       ))}
     </ul>
+  );
+}
+
+const ROUTABLE = ["transfer_notice", "deposit", "withdrawal", "transfer", "balance_inquiry"] as const;
+const CUSTOMER_KINDS = ["deposit", "withdrawal", "transfer", "balance_inquiry"] as const;
+
+type SettingsForm = {
+  enabled: boolean;
+  exchangers_enabled: boolean;
+  customers_enabled: boolean;
+  owners_enabled: boolean;
+  read_images: boolean;
+  reply_unregistered: boolean;
+  auto_ack: boolean;
+  customer_kinds: string[];
+  unregistered_text: string;
+  paused_text: string;
+};
+
+function Controls({ canEdit }: { canEdit: boolean }) {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["wa-bot-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("wa_bot_settings").select("*").eq("id", 1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const [form, setForm] = useState<SettingsForm | null>(null);
+  useEffect(() => {
+    if (data) setForm({ ...data, customer_kinds: [...data.customer_kinds] });
+  }, [data]);
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!form) return;
+      const { error } = await supabase.from("wa_bot_settings").update({ ...form, unregistered_text: form.unregistered_text.trim().slice(0, 500), paused_text: form.paused_text.trim().slice(0, 500), updated_at: new Date().toISOString() }).eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("حُفظت إعدادات البوت");
+      void qc.invalidateQueries({ queryKey: ["wa-bot-settings"] });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  if (isLoading || !form) return <LoadingRows rows={4} />;
+  const set = <K extends keyof SettingsForm>(k: K, v: SettingsForm[K]) => setForm({ ...form, [k]: v });
+  const row = (k: "enabled" | "exchangers_enabled" | "customers_enabled" | "owners_enabled" | "read_images" | "reply_unregistered" | "auto_ack", label: string, hint: string) => (
+    <li className="flex items-center justify-between gap-3 py-2">
+      <div className="min-w-0">
+        <div className="text-sm font-medium">{label}</div>
+        <div className="text-xs text-muted-foreground">{hint}</div>
+      </div>
+      <Switch checked={form[k]} disabled={!canEdit || (k !== "enabled" && !form.enabled)} onCheckedChange={(v) => set(k, v)} aria-label={label} />
+    </li>
+  );
+  return (
+    <FormCard onSubmit={(e) => { e.preventDefault(); if (canEdit) save.mutate(); }}>
+      {!canEdit && <Notice tone="warn">تعديل الإعدادات للمدير العام فقط.</Notice>}
+      <ul className="divide-y divide-border">
+        {row("enabled", "تشغيل البوت", "إيقافه يرد على الجميع برسالة الإيقاف ولا يعالج شيئًا")}
+        {row("exchangers_enabled", "فئة الصرافين والوكلاء", "قراءة إشعارات الحوالات ومنع تكرارها")}
+        {row("customers_enabled", "فئة العملاء", "استقبال طلبات الإيداع والسحب والحوالات")}
+        {row("owners_enabled", "فئة المالك", "إرسال الطلبات للاعتماد وتنفيذ أوامر المالك")}
+        {row("read_images", "قراءة الصور", "تحليل صور الإشعارات والسندات بالذكاء الاصطناعي")}
+        {row("auto_ack", "رد الاستلام التلقائي", "إبلاغ المرسل برقم طلبه فور وصوله")}
+        {row("reply_unregistered", "الرد على الأرقام غير المسجلة", "إرسال رسالة التسجيل لأي رقم غير مربوط")}
+      </ul>
+      <Field label="طلبات العملاء المفعّلة">
+        <div className="flex flex-wrap gap-1.5 pt-2">
+          {CUSTOMER_KINDS.map((k) => {
+            const on = form.customer_kinds.includes(k);
+            return (
+              <button
+                key={k}
+                type="button"
+                disabled={!canEdit}
+                aria-pressed={on}
+                onClick={() => set("customer_kinds", on ? form.customer_kinds.filter((x) => x !== k) : [...form.customer_kinds, k])}
+                className={`rounded-full border px-2.5 py-1 text-xs ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+              >
+                {KIND_LABELS[k]}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+      <Field label="رسالة الرقم غير المسجل">
+        <Textarea rows={2} value={form.unregistered_text} disabled={!canEdit} onChange={(e) => set("unregistered_text", e.target.value)} />
+      </Field>
+      <Field label="رسالة الإيقاف المؤقت">
+        <Textarea rows={2} value={form.paused_text} disabled={!canEdit} onChange={(e) => set("paused_text", e.target.value)} />
+      </Field>
+      {canEdit && <Button type="submit" className="w-full" disabled={save.isPending}>حفظ الإعدادات</Button>}
+    </FormCard>
   );
 }
