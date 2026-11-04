@@ -1967,6 +1967,21 @@ export type Database = {
           },
         ]
       }
+      imported_password_setup: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       incoming_transfers: {
         Row: {
           agent_id: number | null

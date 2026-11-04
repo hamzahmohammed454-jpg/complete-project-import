@@ -57,6 +57,13 @@
       "when": 1793725977546,
       "tag": "0007_delete_outgoing_transfer",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793803583501,
+      "tag": "0008_imported_admin_password_setup",
+      "breakpoints": true
     }
   ]
 }
