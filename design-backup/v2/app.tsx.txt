@@ -1,0 +1,210 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, Wallet } from "lucide-react";
+import { useMemo } from "react";
+
+import { Notice, SectionCard } from "@/components/ui-kit";
+import { supabase } from "@/integrations/supabase/client";
+import { adenDate } from "@/lib/closing";
+import { fmt } from "@/lib/money";
+
+export const Route = createFileRoute("/_authenticated/app")({
+  head: () => ({ meta: [{ title: "الرئيسية — ابو طه للصرافة" }, { name: "description", content: "مربعات النظام السريعة وأرصدة الصناديق." }, { property: "og:title", content: "الرئيسية — ابو طه للصرافة" }, { property: "og:description", content: "مربعات النظام السريعة وأرصدة الصناديق." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  component: HomeScreen,
+});
+
+const TILE_CLS =
+  "flex h-full min-h-28 min-[380px]:min-h-32 flex-col items-center justify-center gap-1.5 min-[380px]:gap-2 rounded-3xl border border-border/60 bg-card px-1.5 py-3 text-center shadow-card transition-transform active:scale-[0.97]";
+
+const ICONS = import.meta.glob("@/assets/home-icons/*.webp", { eager: true, import: "default" }) as Record<string, string>;
+const ICON = (name: string) => Object.entries(ICONS).find(([k]) => k.endsWith(`/${name}.webp`))?.[1] ?? "";
+
+const BIG_TILES = [
+  { to: "/transfers", search: { dir: "outgoing" }, label: "ارسال حوالة", img: "send" },
+  { to: "/transfers", search: { dir: "incoming" }, label: "استلام حوالة", img: "receive" },
+] as const;
+
+const SMALL_TILES = [
+  { to: "/vouchers", label: "سند صرف", img: "pay" },
+  { to: "/vouchers", label: "سند قبض", img: "receipt" },
+  { to: "/journal", label: "قيد بسيط", img: "simple" },
+  { to: "/exchange", label: "بيع وشراء عملات", img: "exchange" },
+  { to: "/entries", label: "قيد مزدوج", img: "double" },
+  { to: "/currencies", label: "العملات", img: "currencies" },
+  { to: "/statement", label: "تقارير الحسابات", img: "acc-reports" },
+  { to: "/statistics", label: "احصائيات", img: "stats" },
+  { to: "/daily-report", label: "تقارير العملات", img: "cur-reports" },
+  { to: "/customers", label: "الحسابات والعملاء", img: "customers" },
+  { to: "/staff", label: "اعداد المستخدمين", img: "staff" },
+  { to: "/setup", label: "الضبط", img: "setup" },
+  { to: "/backup", label: "النسخ الاحتياطي", img: "backup" },
+  { to: "/closing", label: "الإقفالات المحاسبية", img: "closing" },
+  { to: "/auto-reply", label: "الرد الآلي", img: "autoreply" },
+  { to: "/transfer-setup", label: "التهيئة", img: "transfer-setup" },
+  { to: "/news", label: "الأخبار", img: "news" },
+  { to: "/boxes", label: "الصناديق", img: "boxes" },
+  { to: "/box-report", label: "ميزان الصناديق", img: "stats" },
+  { to: "/whatsapp", label: "واتساب", img: "whatsapp" },
+  { to: "/assistant", label: "المساعد الآلي", img: "assistant" },
+  { to: "/computer", label: "ربط بالكمبيوتر", img: "computer" },
+  { to: "/contact", label: "تواصل معنا", img: "contact" },
+  { to: "/getting-started", label: "الإعداد الأولي", img: "setup" },
+  { to: "/app-status", label: "حالة النشر", img: "computer" },
+] as const;
+
+
+
+function HomeScreen() {
+  const today = adenDate();
+
+  const { data: pending = 0 } = useQuery({
+    queryKey: ["home", "transfers-pending"],
+    queryFn: async () => {
+      const [out_, in_] = await Promise.all([
+        supabase.from("outgoing_transfers").select("id", { count: "exact", head: true }).eq("delivered", false).eq("canceled", false),
+        supabase.from("incoming_transfers").select("id", { count: "exact", head: true }).eq("delivered", false).eq("canceled", false).is("internal_outgoing_id", null),
+      ]);
+      return (out_.count ?? 0) + (in_.count ?? 0);
+    },
+  });
+
+  // أرصدة الصناديق بكل عملة (محسوبة في القاعدة)
+  const { data: boxSummary = [] } = useQuery({
+    queryKey: ["box_day_summary", today],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("box_day_summary", { p_date: today });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const { data: boxes = [] } = useQuery({
+    queryKey: ["boxes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("boxes").select("id, box_name").order("the_number");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const { data: currencies = [] } = useQuery({
+    queryKey: ["currencies"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("currencies").select("id, currency_name").order("the_number");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const curName = (id: number | null) => currencies.find((c) => c.id === id)?.currency_name ?? "";
+
+  const boxBalances = useMemo(() => {
+    const byBox = new Map<number, { currency: string; amount: number }[]>();
+    for (const r of boxSummary) {
+      const closing = Number(r.closing);
+      if (closing === 0) continue;
+      const list = byBox.get(r.box_id) ?? [];
+      list.push({ currency: curName(r.currency_id), amount: closing });
+      byBox.set(r.box_id, list);
+    }
+    return byBox;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boxSummary, currencies]);
+
+
+  // تنبيه: حسابات تجاوزت سقفها
+  const { data: overCeilingCount = 0 } = useQuery({
+    queryKey: ["home", "over-ceiling"],
+    queryFn: async () => {
+      const [accs, moves] = await Promise.all([
+        supabase.from("accounts").select("id, ceiling_amount, ceiling_currency_id").not("ceiling_amount", "is", null),
+        supabase.from("entries_details").select("account_id, currency_id, side, amount"),
+      ]);
+      if (accs.error) throw accs.error;
+      if (moves.error) throw moves.error;
+      const nets = new Map<string, number>();
+      for (const r of moves.data ?? []) {
+        if (r.account_id == null) continue;
+        const k = `${r.account_id}|${r.currency_id ?? 0}`;
+        nets.set(k, (nets.get(k) ?? 0) + (r.side === "مدين" ? Number(r.amount) : -Number(r.amount)));
+      }
+      return (accs.data ?? []).filter(
+        (a) => a.ceiling_amount != null && (nets.get(`${a.id}|${a.ceiling_currency_id ?? 0}`) ?? 0) > a.ceiling_amount,
+      ).length;
+    },
+  });
+
+  return (
+    <>
+
+      {(pending > 0 || overCeilingCount > 0) && (
+        <div className="mb-4 grid gap-2">
+          {pending > 0 && (
+            <Link to="/transfers" search={{ dir: "incoming" }}>
+              <Notice tone="warn" icon={AlertTriangle}>
+                {fmt(pending)} حوالة معلّقة بانتظار التسليم — اضغط لمراجعتها.
+              </Notice>
+            </Link>
+          )}
+          {overCeilingCount > 0 && (
+            <Link to="/accounts">
+              <Notice tone="danger" icon={AlertTriangle}>
+                {fmt(overCeilingCount)} حساب تجاوز سقفه المحدد — اضغط لعرض شجرة الحسابات.
+              </Notice>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {boxes.length === 0 && (
+        <Link to="/getting-started" className="mb-3 block rounded-2xl border border-primary/40 bg-primary/10 p-3 text-sm font-semibold text-foreground">
+          ابدأ من هنا: خطوات الإعداد الأولي (الصناديق والأرصدة الافتتاحية) ←
+        </Link>
+      )}
+      <ul className="mb-3 grid grid-cols-2 gap-2 min-[380px]:gap-3">
+        {BIG_TILES.map((t) => (
+          <li key={t.label}>
+            <Link to={t.to} search={t.search as never} className={TILE_CLS}>
+              <img src={ICON(t.img)} alt="" width={64} height={64} className="size-14 min-[380px]:size-16 shrink-0 rounded-2xl object-contain" />
+              <span className="text-base font-bold text-foreground">{t.label}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <ul className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(min(6.25rem,100%),1fr))] gap-2 min-[380px]:gap-2.5 sm:grid-cols-4 md:grid-cols-5">
+        {SMALL_TILES.map((t) => (
+          <li key={t.label}>
+            <Link to={t.to} className={TILE_CLS}>
+              <img src={ICON(t.img)} alt="" width={56} height={56} loading="lazy" className="size-12 min-[380px]:size-14 shrink-0 rounded-2xl object-contain" />
+              <span className="flex min-h-9 w-full min-w-0 items-center justify-center break-words text-balance text-xs min-[380px]:text-[13px] font-bold leading-tight text-foreground">{t.label}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <SectionCard title="أرصدة الصناديق" aside="اليوم">
+        {boxBalances.size === 0 ? (
+          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Wallet className="size-4" />
+            لا حركات على الصناديق بعد اليوم.
+          </p>
+        ) : (
+          <ul className="grid gap-2">
+            {boxes
+              .filter((b) => boxBalances.has(b.id))
+              .map((b) => (
+                <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                  <span className="text-sm font-medium">{b.box_name}</span>
+                  <span className="flex flex-wrap gap-2">
+                    {(boxBalances.get(b.id) ?? []).map((r) => (
+                      <span key={r.currency} className="ledger-figures rounded-lg bg-card px-2 py-0.5 text-xs font-semibold shadow-card">
+                        {fmt(r.amount)} <span className="font-normal text-muted-foreground">{r.currency}</span>
+                      </span>
+                    ))}
+                  </span>
+                </li>
+              ))}
+          </ul>
+        )}
+      </SectionCard>
+
+    </>
+  );
+}

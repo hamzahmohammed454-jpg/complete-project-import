@@ -1,0 +1,208 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, Inbox, Repeat, Send, Wallet } from "lucide-react";
+import { useMemo } from "react";
+
+import { IconTile, Notice, SectionCard } from "@/components/ui-kit";
+import { supabase } from "@/integrations/supabase/client";
+import { adenDate } from "@/lib/closing";
+import { fmt } from "@/lib/money";
+
+export const Route = createFileRoute("/_authenticated/app")({
+  head: () => ({ meta: [{ title: "الرئيسية — ابو طه للصرافة" }, { name: "description", content: "لوحة اليوم وأرصدة الصناديق والحوالات المعلقة." }, { property: "og:title", content: "الرئيسية — ابو طه للصرافة" }, { property: "og:description", content: "لوحة اليوم وأرصدة الصناديق والحوالات المعلقة." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  component: HomeScreen,
+});
+
+const QUICK_CLS =
+  "flex h-full flex-col gap-2.5 rounded-2xl border border-border/60 bg-card p-3.5 shadow-card transition-transform active:scale-[0.98]";
+
+function HomeScreen() {
+  const today = adenDate();
+
+  const { data: todayTransfers = 0 } = useQuery({
+    queryKey: ["home", "transfers-today", today],
+    queryFn: async () => {
+      const [out_, in_] = await Promise.all([
+        supabase.from("outgoing_transfers").select("id", { count: "exact", head: true }).eq("the_date", today),
+        supabase.from("incoming_transfers").select("id", { count: "exact", head: true }).eq("the_date", today).is("internal_outgoing_id", null),
+      ]);
+      return (out_.count ?? 0) + (in_.count ?? 0);
+    },
+  });
+  const { data: pending = 0 } = useQuery({
+    queryKey: ["home", "transfers-pending"],
+    queryFn: async () => {
+      const [out_, in_] = await Promise.all([
+        supabase.from("outgoing_transfers").select("id", { count: "exact", head: true }).eq("delivered", false).eq("canceled", false),
+        supabase.from("incoming_transfers").select("id", { count: "exact", head: true }).eq("delivered", false).eq("canceled", false).is("internal_outgoing_id", null),
+      ]);
+      return (out_.count ?? 0) + (in_.count ?? 0);
+    },
+  });
+
+  // أرصدة الصناديق بكل عملة (محسوبة في القاعدة)
+  const { data: boxSummary = [] } = useQuery({
+    queryKey: ["box_day_summary", today],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("box_day_summary", { p_date: today });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const { data: boxes = [] } = useQuery({
+    queryKey: ["boxes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("boxes").select("id, box_name").order("the_number");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const { data: currencies = [] } = useQuery({
+    queryKey: ["currencies"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("currencies").select("id, currency_name").order("the_number");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const curName = (id: number | null) => currencies.find((c) => c.id === id)?.currency_name ?? "";
+
+  const boxBalances = useMemo(() => {
+    const byBox = new Map<number, { currency: string; amount: number }[]>();
+    for (const r of boxSummary) {
+      const closing = Number(r.closing);
+      if (closing === 0) continue;
+      const list = byBox.get(r.box_id) ?? [];
+      list.push({ currency: curName(r.currency_id), amount: closing });
+      byBox.set(r.box_id, list);
+    }
+    return byBox;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boxSummary, currencies]);
+
+
+  // تنبيه: حسابات تجاوزت سقفها
+  const { data: overCeilingCount = 0 } = useQuery({
+    queryKey: ["home", "over-ceiling"],
+    queryFn: async () => {
+      const [accs, moves] = await Promise.all([
+        supabase.from("accounts").select("id, ceiling_amount, ceiling_currency_id").not("ceiling_amount", "is", null),
+        supabase.from("entries_details").select("account_id, currency_id, side, amount"),
+      ]);
+      if (accs.error) throw accs.error;
+      if (moves.error) throw moves.error;
+      const nets = new Map<string, number>();
+      for (const r of moves.data ?? []) {
+        if (r.account_id == null) continue;
+        const k = `${r.account_id}|${r.currency_id ?? 0}`;
+        nets.set(k, (nets.get(k) ?? 0) + (r.side === "مدين" ? Number(r.amount) : -Number(r.amount)));
+      }
+      return (accs.data ?? []).filter(
+        (a) => a.ceiling_amount != null && (nets.get(`${a.id}|${a.ceiling_currency_id ?? 0}`) ?? 0) > a.ceiling_amount,
+      ).length;
+    },
+  });
+
+  return (
+    <>
+      <section className="bg-brand shadow-float relative mb-5 overflow-hidden rounded-3xl p-5 text-primary-foreground">
+        <div className="bg-dots absolute inset-0 opacity-50" aria-hidden />
+        <div className="absolute -bottom-8 -left-8 size-32 rounded-full bg-gold/25 blur-3xl" aria-hidden />
+        <div className="relative">
+          <p className="text-[11px] font-medium text-primary-foreground/75">
+            {new Date().toLocaleDateString("ar-YE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </p>
+          <h1 className="display mt-1 text-2xl font-bold">لوحة اليوم</h1>
+          <div className="mt-1.5 h-1 w-10 rounded-full bg-gold" aria-hidden />
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-primary-foreground/12 p-3 backdrop-blur-sm">
+              <p className="text-[11px] font-medium text-primary-foreground/75">حوالات اليوم</p>
+              <p className="ledger-figures mt-1.5 text-2xl font-bold">{fmt(todayTransfers)}</p>
+            </div>
+            <div className="rounded-2xl bg-primary-foreground/12 p-3 backdrop-blur-sm">
+              <p className="text-[11px] font-medium text-primary-foreground/75">حوالات معلقة</p>
+              <p className="ledger-figures mt-1.5 text-2xl font-bold">{fmt(pending)}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {(pending > 0 || overCeilingCount > 0) && (
+        <div className="mb-4 grid gap-2">
+          {pending > 0 && (
+            <Link to="/transfers" search={{ dir: "incoming" }}>
+              <Notice tone="warn" icon={AlertTriangle}>
+                {fmt(pending)} حوالة معلّقة بانتظار التسليم — اضغط لمراجعتها.
+              </Notice>
+            </Link>
+          )}
+          {overCeilingCount > 0 && (
+            <Link to="/accounts">
+              <Notice tone="danger" icon={AlertTriangle}>
+                {fmt(overCeilingCount)} حساب تجاوز سقفه المحدد — اضغط لعرض شجرة الحسابات.
+              </Notice>
+            </Link>
+          )}
+        </div>
+      )}
+
+      <ul className="mb-5 grid grid-cols-2 gap-3">
+        <li>
+          <Link to="/transfers" search={{ dir: "incoming" }} className={QUICK_CLS}>
+            <IconTile icon={Inbox} tone="mint" size="lg" />
+            <span className="text-sm font-semibold leading-tight">استلام حوالة</span>
+            <span className="text-[11px] text-muted-foreground">حوالة واردة لعميل</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/transfers" search={{ dir: "outgoing" }} className={QUICK_CLS}>
+            <IconTile icon={Send} tone="blue" size="lg" />
+            <span className="text-sm font-semibold leading-tight">إرسال حوالة</span>
+            <span className="text-[11px] text-muted-foreground">حوالة صادرة لوكيل</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/exchange" search={{ kind: "buy" }} className={QUICK_CLS}>
+            <IconTile icon={Repeat} tone="lime" size="lg" />
+            <span className="text-sm font-semibold leading-tight">شراء عملة</span>
+            <span className="text-[11px] text-muted-foreground">بالسعر اليومي</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/exchange" search={{ kind: "sell" }} className={QUICK_CLS}>
+            <IconTile icon={Repeat} tone="gold" size="lg" />
+            <span className="text-sm font-semibold leading-tight">بيع عملة</span>
+            <span className="text-[11px] text-muted-foreground">بالسعر اليومي</span>
+          </Link>
+        </li>
+      </ul>
+
+      <SectionCard title="أرصدة الصناديق" aside="اليوم">
+        {boxBalances.size === 0 ? (
+          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Wallet className="size-4" />
+            لا حركات على الصناديق بعد اليوم.
+          </p>
+        ) : (
+          <ul className="grid gap-2">
+            {boxes
+              .filter((b) => boxBalances.has(b.id))
+              .map((b) => (
+                <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                  <span className="text-sm font-medium">{b.box_name}</span>
+                  <span className="flex flex-wrap gap-2">
+                    {(boxBalances.get(b.id) ?? []).map((r) => (
+                      <span key={r.currency} className="ledger-figures rounded-lg bg-card px-2 py-0.5 text-xs font-semibold shadow-card">
+                        {fmt(r.amount)} <span className="font-normal text-muted-foreground">{r.currency}</span>
+                      </span>
+                    ))}
+                  </span>
+                </li>
+              ))}
+          </ul>
+        )}
+      </SectionCard>
+
+    </>
+  );
+}

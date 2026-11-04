@@ -5,13 +5,18 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
+ * Design system for نظام شركات الصرافة — a mobile-first money-exchange ledger.
  *
  * The @theme inline block maps CSS custom properties to Tailwind utility
  * classes (e.g. --color-primary -> bg-primary, text-primary).
  *
  * The :root and .dark blocks define the actual color values using oklch.
  * All colors MUST use oklch format.
+ *
+ * Visual direction: modern financial blue — a flat pure-white page,
+ * white cards separated by a hairline border and a soft shadow, deep navy header, and
+ * every module icon sitting inside a small pastel colour block (--tile-*
+ * tokens). Gold #c9a227 and emerald #10b981 are the brand highlights.
  *
  * To add a new semantic color:
  * 1. Add the variable to :root (light value) and .dark (dark value)
@@ -26,6 +31,11 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  --font-sans: "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Readex Pro", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -59,77 +69,179 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Ledger semantics: money in, money out, and the gold brand mark. */
+  --color-gold: var(--gold);
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-positive: var(--positive);
+  --color-positive-foreground: var(--positive-foreground);
+  --color-negative: var(--negative);
+  --color-negative-foreground: var(--negative-foreground);
+  --color-paper: var(--paper);
+
+  /* Pastel icon tiles: a soft colour block behind every module icon. */
+  --color-tile-blue: var(--tile-blue);
+  --color-tile-blue-ink: var(--tile-blue-ink);
+  --color-tile-sky: var(--tile-sky);
+  --color-tile-sky-ink: var(--tile-sky-ink);
+  --color-tile-teal: var(--tile-teal);
+  --color-tile-teal-ink: var(--tile-teal-ink);
+  --color-tile-mint: var(--tile-mint);
+  --color-tile-mint-ink: var(--tile-mint-ink);
+  --color-tile-lime: var(--tile-lime);
+  --color-tile-lime-ink: var(--tile-lime-ink);
+  --color-tile-gold: var(--tile-gold);
+  --color-tile-gold-ink: var(--tile-gold-ink);
+  --color-tile-rose: var(--tile-rose);
+  --color-tile-rose-ink: var(--tile-rose-ink);
+  --color-tile-violet: var(--tile-violet);
+  --color-tile-violet-ink: var(--tile-violet-ink);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 0.75rem;
+
+  /* Royal navy #0f2a4a / royal blue #1e4f8a with gold #c9a227 on a clean white page —
+     the trust palette of premium private banks. */
+  --background: oklch(0.965 0.004 270);
+  --foreground: oklch(0.24 0.05 255);
+  --paper: oklch(0.955 0.018 85);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.24 0.05 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --popover-foreground: oklch(0.24 0.05 255);
+
+  --primary: oklch(0.43 0.11 255);
+  --primary-foreground: oklch(0.99 0 0);
+  --navy: oklch(0.27 0.06 255);
+  --navy-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.965 0.006 255);
+  --secondary-foreground: oklch(0.3 0.06 255);
+  --muted: oklch(0.955 0.008 255);
+  --muted-foreground: oklch(0.45 0.03 255);
+  --accent: oklch(0.95 0.045 88);
+  --accent-foreground: oklch(0.36 0.08 75);
+
+  --gold: oklch(0.72 0.13 85);
+  --gold-foreground: oklch(0.25 0.06 80);
+  --positive: oklch(0.55 0.13 160);
+  --positive-foreground: oklch(0.99 0 0);
+  --negative: oklch(0.55 0.2 27);
+  --negative-foreground: oklch(0.99 0 0);
+
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.84 0.02 255);
+  --input: oklch(0.85 0.014 255);
+  --ring: oklch(0.72 0.13 85);
+
+  --chart-1: oklch(0.5 0.105 252);
+  --chart-2: oklch(0.72 0.125 85);
+  --chart-3: oklch(0.56 0.13 165);
+  --chart-4: oklch(0.62 0.15 320);
+  --chart-5: oklch(0.62 0.14 260);
+
+  --sidebar: oklch(0.965 0.01 252);
+  --sidebar-foreground: oklch(0.27 0.05 255);
+  --sidebar-primary: oklch(0.5 0.105 252);
+  --sidebar-primary-foreground: oklch(0.98 0.01 250);
+  --sidebar-accent: oklch(0.92 0.02 250);
+  --sidebar-accent-foreground: oklch(0.32 0.06 255);
+  --sidebar-border: oklch(0.89 0.014 252);
+  --sidebar-ring: oklch(0.5 0.105 252);
+
+  /* Icon tiles: pastel block + a saturated ink for the glyph. */
+  --tile-blue: oklch(0.9 0.055 245);
+  --tile-blue-ink: oklch(0.45 0.13 255);
+  --tile-sky: oklch(0.91 0.06 215);
+  --tile-sky-ink: oklch(0.48 0.11 215);
+  --tile-teal: oklch(0.9 0.06 190);
+  --tile-teal-ink: oklch(0.42 0.09 190);
+  --tile-mint: oklch(0.92 0.07 165);
+  --tile-mint-ink: oklch(0.45 0.11 165);
+  --tile-lime: oklch(0.93 0.11 128);
+  --tile-lime-ink: oklch(0.42 0.12 132);
+  --tile-gold: oklch(0.92 0.09 85);
+  --tile-gold-ink: oklch(0.5 0.14 75);
+  --tile-rose: oklch(0.92 0.055 20);
+  --tile-rose-ink: oklch(0.5 0.19 25);
+  --tile-violet: oklch(0.91 0.05 300);
+  --tile-violet-ink: oklch(0.45 0.16 300);
+
+  --shadow-card: 0 14px 30px -18px oklch(0.27 0.06 255 / 40%), 0 0 0 1px oklch(0.87 0.016 255 / 70%);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  /* Night theme: deep navy surfaces with light blue ink and gold highlights. */
+  --background: oklch(0.17 0.03 255);
+  --shadow-float: 0 24px 50px -24px color-mix(in oklab, oklch(0 0 0) 45%, transparent);
+  --foreground: oklch(0.95 0.008 250);
+  --paper: oklch(0.21 0.032 255);
+  --card: oklch(0.23 0.034 255);
+  --card-foreground: oklch(0.95 0.008 250);
+  --popover: oklch(0.23 0.034 255);
+  --popover-foreground: oklch(0.95 0.008 250);
+
+  --primary: oklch(0.76 0.09 250);
+  --navy: oklch(0.22 0.04 255);
+  --navy-foreground: oklch(0.95 0.008 250);
+  --primary-foreground: oklch(0.2 0.05 255);
+  --secondary: oklch(0.3 0.035 255);
+  --secondary-foreground: oklch(0.94 0.01 250);
+  --muted: oklch(0.3 0.032 255);
+  --muted-foreground: oklch(0.72 0.025 252);
+  --accent: oklch(0.34 0.06 165);
+  --accent-foreground: oklch(0.92 0.06 165);
+
+  --gold: oklch(0.8 0.12 85);
+  --gold-foreground: oklch(0.2 0.04 85);
+  --positive: oklch(0.75 0.14 165);
+  --positive-foreground: oklch(0.18 0.04 165);
+  --negative: oklch(0.7 0.17 27);
+  --negative-foreground: oklch(0.18 0.04 27);
+
+  --destructive: oklch(0.7 0.17 27);
+  --destructive-foreground: oklch(0.18 0.04 27);
+  --border: oklch(0.94 0.01 250 / 14%);
+  --input: oklch(0.94 0.01 250 / 20%);
+  --ring: oklch(0.72 0.09 250);
+
+  --chart-1: oklch(0.72 0.1 250);
+  --chart-2: oklch(0.82 0.12 85);
+  --chart-3: oklch(0.75 0.13 165);
+  --chart-4: oklch(0.72 0.15 320);
+  --chart-5: oklch(0.72 0.13 280);
+
+  --sidebar: oklch(0.2 0.032 255);
+  --sidebar-foreground: oklch(0.95 0.008 250);
+  --sidebar-primary: oklch(0.76 0.09 250);
+  --sidebar-primary-foreground: oklch(0.2 0.05 255);
+  --sidebar-accent: oklch(0.29 0.035 255);
+  --sidebar-accent-foreground: oklch(0.95 0.008 250);
+  --sidebar-border: oklch(0.94 0.01 250 / 14%);
+  --sidebar-ring: oklch(0.72 0.09 250);
+
+  /* Tiles in the night theme: a deeper block with a light glyph. */
+  --tile-blue: oklch(0.34 0.055 250);
+  --tile-blue-ink: oklch(0.82 0.08 250);
+  --tile-sky: oklch(0.34 0.055 215);
+  --tile-sky-ink: oklch(0.82 0.08 215);
+  --tile-teal: oklch(0.33 0.055 185);
+  --tile-teal-ink: oklch(0.82 0.09 185);
+  --tile-mint: oklch(0.33 0.055 165);
+  --tile-mint-ink: oklch(0.82 0.09 165);
+  --tile-lime: oklch(0.35 0.07 130);
+  --tile-lime-ink: oklch(0.84 0.11 128);
+  --tile-gold: oklch(0.35 0.065 86);
+  --tile-gold-ink: oklch(0.84 0.1 86);
+  --tile-rose: oklch(0.36 0.065 25);
+  --tile-rose-ink: oklch(0.82 0.11 25);
+  --tile-violet: oklch(0.34 0.055 300);
+  --tile-violet-ink: oklch(0.82 0.08 300);
+
+  --shadow-card: 0 12px 26px -18px oklch(0 0 0 / 60%), 0 1px 2px oklch(0 0 0 / 30%);
 }
 
 @layer base {
@@ -137,8 +249,181 @@
     border-color: var(--color-border);
   }
 
+  html {
+    font-family: var(--font-sans);
+    /* Keep the browser chrome (status bar on phones) on-brand. */
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  /* Money and reference numbers read as a ledger: tabular, monospaced digits. */
+  .ledger-figures {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  .display {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
   }
 }
+
+/* السند الورقي: إطار أسود، خانات محددة، أسطر منقطة وعلامة مائية خفيفة */
+.voucher-paper { border: 1px solid color-mix(in oklab, var(--foreground) 25%, transparent); border-radius: 0.25rem; }
+.voucher-frame { border: 1.5px solid var(--foreground); }
+.voucher-box { border: 1px solid var(--foreground); padding: 0.2rem 0.6rem; background: var(--card); }
+.voucher-line { border-bottom: 1px dotted var(--foreground); min-height: 1.1rem; }
+.voucher-watermark { opacity: 0.06; }
+
+/* الطباعة: السند وحده على الورق، بلا شريط التطبيق ولا الأزرار */
+@media print {
+  @page {
+    margin: 12mm;
+    /* رقم الصفحة أسفل كل ورقة في المتصفحات الداعمة (كروم يعرضه من خيار «الترويسات والتذييلات» في نافذة الطباعة) */
+    @bottom-center {
+      content: "صفحة " counter(page) " من " counter(pages);
+      font-size: 10px;
+      color: #666;
+    }
+  }
+  html,
+  body {
+    background: #fff;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .voucher,
+  .voucher *,
+  .printable,
+  .printable * {
+    visibility: visible;
+  }
+  .voucher .no-print {
+    display: none !important;
+  }
+  .voucher,
+  .printable {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    width: 100%;
+    border-color: var(--primary);
+    background: #fff;
+    /* مساحة سفلية حتى لا يغطي تذييل رقم الصفحة آخر سطر */
+    padding-bottom: 14mm;
+  }
+  /* تكرار عناوين أعمدة الجداول أعلى كل صفحة */
+  .printable thead,
+  .voucher thead {
+    display: table-header-group;
+  }
+  /* لا يُقطع سطر الحركة بين صفحتين */
+  .printable tr,
+  .voucher tr {
+    break-inside: avoid;
+  }
+}
+
+/* شاشة الدخول: خلفية العلامة ونقوش خفيفة */
+:root {
+  /* Header gradient: deep navy #0e2a47 flowing into financial blue #17548d. */
+  --gradient-brand: linear-gradient(155deg, oklch(0.22 0.05 255) 0%, oklch(0.27 0.06 255) 45%, var(--primary) 100%);
+  --gradient-gold: linear-gradient(135deg, oklch(0.82 0.12 90), oklch(0.68 0.13 80));
+  --shadow-float: 0 24px 50px -24px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+/* بعد تعريف :root حتى يسود في الوضع الليلي. */
+html.dark {
+  --gradient-brand: linear-gradient(160deg, oklch(0.23 0.045 255) 0%, oklch(0.29 0.055 252) 60%, oklch(0.35 0.07 248) 100%);
+  --shadow-float: 0 24px 50px -24px color-mix(in oklab, oklch(0 0 0) 55%, transparent);
+}
+
+@utility bg-brand {
+  background-image: var(--gradient-brand);
+}
+
+@utility bg-dots {
+  background-image: radial-gradient(color-mix(in oklab, var(--primary-foreground) 22%, transparent) 1px, transparent 1.5px);
+  background-size: 18px 18px;
+}
+
+@utility bg-gold-gradient {
+  background-image: var(--gradient-gold);
+}
+
+@utility shadow-float {
+  box-shadow: var(--shadow-float);
+}
+
+/* البطاقات: سطح أبيض يطفو على الخلفية الزرقاء الفاتحة بظل ناعم. */
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+/* ضبط المدخلات في نموذج الحوالة */
+form[style*="--field-size"] input,
+form[style*="--field-size"] select { font-size: var(--field-size); }
+form[data-tint] input,
+form[data-tint] select { background-color: var(--accent); }
+
+/* قوالب السندات: تُختار من شاشة «تصميم الإشعارات» */
+.voucher-paper { font-size: var(--voucher-font, 100%); }
+html[style*="--voucher-accent"] .voucher-paper { border-color: var(--voucher-accent); }
+html[style*="--voucher-accent"] .voucher-paper .text-destructive { color: var(--voucher-accent); }
+html[data-voucher-tpl="table"] .voucher-paper { border-width: 2px; border-radius: 0; }
+html[data-voucher-tpl="table"] .voucher-paper .voucher-watermark { display: none; }
+html[data-voucher-tpl="rounded"] .voucher-paper { border-width: 2px; border-radius: 1.25rem; }
+html[data-voucher-tpl="compact"] .voucher-paper { padding: 0.5rem; font-size: calc(var(--voucher-font, 100%) * 0.88); }
+html[data-voucher-tpl="compact"] .voucher-paper .voucher-watermark { display: none; }
+/* سند حوالة بدون حساب: قالب مبسط بلا إطار داخلي ولا علامة مائية */
+html[data-voucher-tpl="bare"] .voucher-paper .voucher-frame { border: none; }
+html[data-voucher-tpl="bare"] .voucher-paper .voucher-watermark { display: none; }
+/* خط السند ولونه وثقله وتظليل جدوله من شاشة «تصميم الإشعارات» */
+html[style*="--voucher-font-family"] .voucher-paper { font-family: var(--voucher-font-family), "Readex Pro", sans-serif; }
+html[style*="--voucher-text"] .voucher-paper { color: var(--voucher-text); }
+html[data-voucher-bold="true"] .voucher-paper,
+html[data-voucher-bold="true"] .voucher-paper * { font-weight: 700; }
+.voucher-paper td,
+.voucher-paper th { background: color-mix(in oklab, var(--voucher-accent, var(--foreground)) var(--voucher-shade, 0%), transparent); }
+
+/* اسم المحل بخط الرقعة الفاخر مع لمعة ذهبية بارزة */
+.brand-title {
+  font-family: "Aref Ruqaa", "Readex Pro", serif;
+  font-weight: 700;
+  line-height: 1.5;
+  background: linear-gradient(180deg, oklch(0.85 0.14 90), oklch(0.62 0.13 75) 55%, oklch(0.45 0.1 150));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 color-mix(in oklab, var(--foreground) 35%, transparent));
+}
+
+/* ألوان أقسام الشاشة الرئيسية */
+:root {
+  --section-ops: linear-gradient(150deg, oklch(0.3 0.08 255), oklch(0.45 0.13 250));
+  --section-reports: linear-gradient(150deg, oklch(0.34 0.08 170), oklch(0.5 0.11 165));
+  --section-accounts: linear-gradient(150deg, oklch(0.42 0.1 60), oklch(0.62 0.13 75));
+  --section-tools: linear-gradient(150deg, oklch(0.3 0.09 300), oklch(0.46 0.12 295));
+}
+@utility bg-section-ops { background-image: var(--section-ops); }
+@utility bg-section-reports { background-image: var(--section-reports); }
+@utility bg-section-accounts { background-image: var(--section-accounts); }
+@utility bg-section-tools { background-image: var(--section-tools); }
+
+/* Account statement view: compact type so more columns/rows fit on a phone. */
+.statement-compact table { font-size: 11px; }
+.statement-compact th { font-size: 10px; padding-block: 0.35rem; }
+.statement-compact td { padding-block: 0.2rem; }
+.statement-compact td .text-\[10px\] { font-size: 9px; }

@@ -1,0 +1,10 @@
+[
+ {"capability":"code","source":"al-sarafa-main.zip","outcome":"migrate","status":"verified","next_action":"none"},
+ {"capability":"schema","source":"drizzle/migrations 0000-0007","outcome":"migrate","status":"verified","next_action":"none"},
+ {"capability":"records","source":"0001_import_records.sql","outcome":"migrate","status":"verified","next_action":"none"},
+ {"capability":"auth identities","source":"auth.users (1 admin)","outcome":"migrate","status":"pending","next_action":"Owner sets new admin password on first sign-in"},
+ {"capability":"authorization","source":"user_roles/RLS","outcome":"migrate","status":"verified","next_action":"none"},
+ {"capability":"file storage","source":"transfer-evidence bucket","outcome":"migrate","status":"implemented","next_action":"Old photo files were not in the upload"},
+ {"capability":"AI assistant","source":"Lovable AI","outcome":"keep","status":"implemented","next_action":"none"},
+ {"capability":"cutover","source":"published site al-sarafa.lovable.app / Android wrapper","outcome":"pending","status":"pending","next_action":"Publish; Android app points at the old site address"}
+]
