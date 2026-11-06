@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { validateRecoveryPassword } from "@/lib/password-recovery";
+import { useServerFn } from "@tanstack/react-start";
+import { resetOwnAdminPassword } from "@/lib/password-recovery.functions";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({ meta: [
@@ -26,6 +28,8 @@ function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [adminRecovery, setAdminRecovery] = useState(false);
+  const resetAdmin = useServerFn(resetOwnAdminPassword);
 
   useEffect(() => {
     if (started.current) return;
@@ -34,7 +38,15 @@ function ResetPassword() {
     const token = params.get("token_hash");
     const recovery = params.get("type") === "recovery";
     window.history.replaceState(null, "", window.location.pathname);
-    if (!token || !recovery) { setState("invalid"); return; }
+    if (!token || !recovery) {
+      void supabase.auth.getUser().then(async ({ data, error }) => {
+        if (error || !data.user) { setState("invalid"); return; }
+        const role = await supabase.rpc("is_admin", { _user_id: data.user.id });
+        if (role.error || !role.data) { setState("invalid"); return; }
+        setAdminRecovery(true); setState("ready");
+      }).catch(() => setState("invalid"));
+      return;
+    }
     void supabase.auth.verifyOtp({ token_hash: token, type: "recovery" })
       .then(({ data, error }) => setState(!error && data.session ? "ready" : "invalid"))
       .catch(() => setState("invalid"));
@@ -47,8 +59,11 @@ function ResetPassword() {
     if (invalid) { toast.error(invalid); return; }
     setBusy(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      if (adminRecovery) await resetAdmin({ data: { password } });
+      else {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+      }
       setPassword(""); setConfirm(""); setState("invalid");
       await supabase.auth.signOut();
       toast.success("تم حفظ كلمة المرور الجديدة، سجّل الدخول بها");
