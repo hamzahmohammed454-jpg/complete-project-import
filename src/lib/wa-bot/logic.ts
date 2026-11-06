@@ -156,7 +156,7 @@ export function canOpenForPosting(i: { kind: string; status: string; posted_id: 
 const CURRENCY_HINTS: Array<[RegExp, RegExp]> = [
   [/دولار|usd|\$/i, /دولار|usd/i],
   [/سعود|sar/i, /سعود|sar/i],
-  [/يمن|yer|ريال$/i, /يمن|yer/i],
+  [/يمن|yer/i, /يمن|yer/i],
   [/درهم|aed/i, /درهم|aed/i],
   [/يورو|eur/i, /يورو|eur/i],
 ];
