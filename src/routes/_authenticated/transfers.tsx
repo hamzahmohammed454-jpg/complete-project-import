@@ -29,6 +29,7 @@ import {
 } from "@/components/ui-kit";
 import { useAppRoles } from "@/hooks/use-app-roles";
 import { supabase } from "@/integrations/supabase/client";
+import { matchCurrencyId } from "@/lib/wa-bot/logic";
 import { computeCommission, findRule, type CommissionRule } from "@/lib/commission";
 import { fmt, fmtMoney } from "@/lib/money";
 import { whatsAppLink } from "@/lib/whatsapp";
@@ -50,9 +51,11 @@ export const Route = createFileRoute("/_authenticated/transfers")({
   head: () => ({ meta: [{ title: "قبض وتوريد الحوالات — ابو طه للصرافة" }, { name: "description", content: "قبض الحوالات الصادرة وتوريد الواردة وتسليمها مع العمولة والصندوق." }, { property: "og:title", content: "قبض وتوريد الحوالات — ابو طه للصرافة" }, { property: "og:description", content: "قبض الحوالات الصادرة وتوريد الواردة وتسليمها مع العمولة والصندوق." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   // كل اتجاه شاشة مستقلة تُفتح من أيقونتها: /transfers?dir=outgoing (قبض) و /transfers?dir=incoming (توريد)
   // view=pay: الواردة المعلقة للصرف، view=export: الصادرة لوكيل غير المصدّرة — بدون نموذج إدخال
-  validateSearch: (search: Record<string, unknown>): { dir?: Direction; view?: "pay" | "export" } => ({
+  // wa=<رقم طلب البوت>: يفتح النموذج معبّأً من طلب واتساب ويربطه بالحوالة بعد الحفظ
+  validateSearch: (search: Record<string, unknown>): { dir?: Direction; view?: "pay" | "export"; wa?: number } => ({
     ...(search["dir"] === "incoming" || search["dir"] === "outgoing" ? { dir: search["dir"] as Direction } : {}),
     ...(search["view"] === "pay" || search["view"] === "export" ? { view: search["view"] as "pay" | "export" } : {}),
+    ...(Number.isInteger(Number(search["wa"])) && Number(search["wa"]) > 0 ? { wa: Number(search["wa"]) } : {}),
   }),
   component: TransfersScreen,
 });
@@ -68,7 +71,7 @@ const VIEW_TEXT: Record<"pay" | "export", { title: string; subtitle: string; emp
 };
 
 function TransfersScreen() {
-  const { dir: searchDir, view } = Route.useSearch();
+  const { dir: searchDir, view, wa } = Route.useSearch();
   // صرف الحوالات شاشة مستقلة بنمط النظام القديم: النموذج أعلى والمصروفة تحت حسب التاريخ
   if (view === "pay") return <PayTransfersScreen />;
   const dir: Direction = view === "export" ? "outgoing" : searchDir ?? "outgoing";
@@ -137,7 +140,7 @@ function TransfersScreen() {
         onSearch={() => document.getElementById("transfer-search")?.focus()}
         onPrintVoucher={() => sel != null && navigate({ to: "/voucher/$kind/$id", params: { kind: dir, id: String(sel) } })}
       />
-      {open && canCreate && <TransferForm key={`${dir}-${formKey}`} dir={dir} onDone={() => setFormKey((k) => k + 1)} />}
+      {open && canCreate && <TransferForm key={`${dir}-${formKey}-${wa ?? ""}`} dir={dir} waItemId={formKey === 0 ? wa : undefined} onDone={() => { setFormKey((k) => k + 1); if (wa) void navigate({ to: "/transfers", search: { dir }, replace: true }); }} />}
 
       <section className="mb-4 rounded-xl border border-border bg-card shadow-card">
         <header className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5">
@@ -349,7 +352,7 @@ function TransferActions({ dir, t, internal }: { dir: Direction; internal: boole
   );
 }
 
-function TransferForm({ dir, onDone }: { dir: Direction; onDone: () => void }) {
+function TransferForm({ dir, onDone, waItemId }: { dir: Direction; onDone: () => void; waItemId?: number | undefined }) {
   const qc = useQueryClient();
   const { data: defaults } = useWorkDefaults();
   const setting = useSystemSettings();
@@ -392,6 +395,35 @@ function TransferForm({ dir, onDone }: { dir: Direction; onDone: () => void }) {
     const currency = defaultCurrencyId(defaults?.currency_id, currencies);
     if (currency) setF((previous) => previous.currency_id && !defaults?.enforce_currency ? previous : { ...previous, currency_id: currency });
   }, [defaults, currencies]);
+  // تعبئة النموذج من طلب بوت واتساب؛ الموظف يراجع كل الحقول ثم يحفظ بنفسه
+  const { data: waItem } = useQuery({
+    queryKey: ["wa-item-prefill", waItemId],
+    enabled: waItemId != null,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("wa_items").select("id, kind, status, amount, currency, transfer_number, summary, data, posted_id, wa_contacts(display_name, role, agent_id, customer_id)").eq("id", waItemId!).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const [waApplied, setWaApplied] = useState(false);
+  useEffect(() => {
+    if (!waItem || waApplied || !currencies.length) return;
+    setWaApplied(true);
+    const d = (waItem.data ?? {}) as { sender?: string | null; receiver?: string | null };
+    const contact = waItem.wa_contacts;
+    const currency = matchCurrencyId(waItem.currency, currencies);
+    setF((p) => ({
+      ...p,
+      amount: waItem.amount != null ? String(waItem.amount) : p.amount,
+      currency_id: currency && !defaults?.enforce_currency ? String(currency) : p.currency_id,
+      sender: d.sender ?? p.sender,
+      receiver: d.receiver ?? p.receiver,
+      reference: waItem.transfer_number ?? p.reference,
+      agent_id: contact?.role === "exchanger" && contact.agent_id ? String(contact.agent_id) : p.agent_id,
+      notes: [`من بوت واتساب #${waItem.id}`, waItem.summary].filter(Boolean).join(" — ").slice(0, 300),
+    }));
+  }, [waItem, waApplied, currencies, defaults?.enforce_currency, dir]);
+
   const { data: agents = [] } = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
@@ -467,13 +499,26 @@ function TransferForm({ dir, onDone }: { dir: Direction; onDone: () => void }) {
         box_id: dir === "outgoing" && f.method === "cash" && f.box_id ? Number(f.box_id) : null,
         notes: f.notes.trim() || null,
       };
+      if (waItemId != null) {
+        if (!navigator.onLine) throw new Error("يلزم الاتصال لحفظ حوالة من طلب البوت");
+        if (waItem?.posted_id != null) throw new Error("طلب البوت هذا محفوظ كحوالة مسبقًا");
+      }
       const { data, error } = dir === "outgoing"
         ? await supabase.from("outgoing_transfers").insert({ ...fields, is_internal: isMainCenter(f.destination), check_id: f.method === "check" ? Number(f.check_id) : null }).select("id").setHeader("x-offline-intent", "true")
         : await supabase.from("incoming_transfers").insert(fields).select("id").setHeader("x-offline-intent", "true");
       if (error) throw error;
-      return pendingResult(data);
+      const pending = pendingResult(data);
+      const newId = Array.isArray(data) ? (data[0] as { id?: number } | undefined)?.id : undefined;
+      let waLinked: boolean | null = null;
+      if (waItemId != null && !pending && newId != null) {
+        const link = await supabase.rpc("link_wa_item_transfer", { p_item: waItemId, p_table: table, p_transfer: newId });
+        waLinked = !link.error;
+      }
+      return { pending, waLinked };
     },
-    onSuccess: (pending) => {
+    onSuccess: ({ pending, waLinked }) => {
+      if (waLinked === true) { toast.success("رُبط طلب البوت بالحوالة"); qc.invalidateQueries({ queryKey: ["wa-items"] }); }
+      if (waLinked === false) toast.warning("حُفظت الحوالة لكن تعذّر ربطها بطلب البوت؛ لا تحفظها مرة أخرى.");
       if (pending) toast.info("حُفظت الحوالة على الهاتف بانتظار الإرسال؛ لم تُرحّل ولم يتغير الرصيد. راجع قائمة المزامنة.");
       else toast.success(dir === "outgoing" && isMainCenter(f.destination) ? "حُفظت الحوالة وأُدرجت معلّقة في صرف الحوالات" : "حُفظت الحوالة");
       qc.invalidateQueries({ queryKey: [table] });
@@ -501,6 +546,9 @@ function TransferForm({ dir, onDone }: { dir: Direction; onDone: () => void }) {
         <div className="w-40"><Field label="التاريخ"><Input required type="date" value={f.date} onChange={set("date")} /></Field></div>
       </div>
       <InputSettings />
+      {waItemId != null && (waItem?.posted_id != null
+        ? <Notice tone="warn">طلب البوت #{waItemId} محفوظ كحوالة مسبقًا؛ لا تحفظه مرة أخرى.</Notice>
+        : <Notice>معبّأ من طلب بوت واتساب <span className="ledger-figures">#{waItemId}</span>{waItem?.wa_contacts?.display_name ? ` (${waItem.wa_contacts.display_name})` : ""}. راجع المبلغ والعملة والأسماء ثم احفظ.</Notice>)}
 
       <FormGroup title="الحوالة">
         <div className="grid grid-cols-2 gap-2">

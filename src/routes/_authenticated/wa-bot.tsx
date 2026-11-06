@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, Pencil, Search, Trash2, RefreshCw } from "lucide-react";
+import { Bot, FileSearch, ImageIcon, Pencil, Search, Sparkles, Trash2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -15,8 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, Field, FormCard, ListItem, LoadingRows, Notice, Segments, selectCls, StatusPill } from "@/components/ui-kit";
 import { useAppRoles } from "@/hooks/use-app-roles";
 import { supabase } from "@/integrations/supabase/client";
-import { decideWaItem } from "@/lib/wa-bot.functions";
-import { botGate, KIND_LABELS, normalizePhone, routeToOwners } from "@/lib/wa-bot/logic";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { analyzeWaNotice, decideWaItem, getWaMessageImage } from "@/lib/wa-bot.functions";
+import { botGate, canOpenForPosting, inboxMatch, KIND_LABELS, normalizePhone, routeToOwners, suggestedDirection } from "@/lib/wa-bot/logic";
 
 export const Route = createFileRoute("/_authenticated/wa-bot")({
   head: () => ({
@@ -32,8 +33,8 @@ export const Route = createFileRoute("/_authenticated/wa-bot")({
   component: WaBotScreen,
 });
 
-type Tab = "items" | "controls" | "contacts" | "messages";
-const ROLE_LABELS: Record<string, string> = { exchanger: "صراف / وكيل", customer: "عميل", owner: "المالك" };
+type Tab = "items" | "review" | "inbox" | "contacts" | "controls";
+const ROLE_LABELS: Record<string, string> = { exchanger: "صراف / وكيل", customer: "عميل", owner: "المالك", manual: "لصق يدوي" };
 const STATUS: Record<string, { label: string; tone: "neutral" | "ok" | "warn" | "bad" }> = {
   pending: { label: "معلق", tone: "warn" },
   approved: { label: "معتمد", tone: "ok" },
@@ -43,26 +44,31 @@ const STATUS: Record<string, { label: string; tone: "neutral" | "ok" | "warn" | 
 
 function WaBotScreen() {
   const { isManager, isAdmin } = useAppRoles();
-  const [tab, setTab] = useState<Tab>("controls");
+  const [tab, setTab] = useState<Tab>("items");
   if (!isManager && !isAdmin) return <Notice tone="warn">هذه الشاشة للمدير فقط.</Notice>;
   return (
     <>
       <MenuStrip tab="/administration" />
-      <SectionIntro title="بوت واتساب" subtitle="إعدادات التشغيل والأرقام ووجهات الطلبات" />
-      <Segments<Tab>
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: "items", label: "الطلبات" },
-          { value: "controls", label: "التحكم" },
-          { value: "contacts", label: "الأرقام" },
-          { value: "messages", label: "الرسائل" },
-        ]}
-      />
+      <SectionIntro title="بوت واتساب" subtitle="وسيط بين النظام ورسائل الصرافين والعملاء: يقرأ، يطابق، ويجهّز العملية لتحفظها بنفسك" />
+      <div className="mb-3 overflow-x-auto">
+        <Segments<Tab>
+          className="mb-0 min-w-[36rem]"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: "items", label: "الطلبات" },
+            { value: "review", label: "عمليات للمراجعة" },
+            { value: "inbox", label: "الوارد" },
+            { value: "contacts", label: "القنوات" },
+            { value: "controls", label: "الإعدادات" },
+          ]}
+        />
+      </div>
       {tab === "items" && <Items />}
-      {tab === "controls" && <Controls canEdit={isAdmin} />}
+      {tab === "review" && <Review />}
+      {tab === "inbox" && <Inbox />}
       {tab === "contacts" && <Contacts canEdit={isAdmin} />}
-      {tab === "messages" && <Messages />}
+      {tab === "controls" && <Controls canEdit={isAdmin} />}
     </>
   );
 }
@@ -105,7 +111,7 @@ function Items() {
 
   return (
     <>
-      <Notice className="mb-3">الاعتماد هنا موافقة فقط؛ تسجيل الحوالة أو السند الفعلي يتم من شاشته المعتادة بنفس البيانات.</Notice>
+      <Notice className="mb-3">الاعتماد هنا موافقة فقط. «فتح للحفظ» يفتح شاشة الحوالة معبّأة، وتراجعها وتحفظها بنفسك.</Notice>
       <Segments<"pending" | "all"> value={filter} onChange={setFilter} options={[{ value: "pending", label: "المعلقة" }, { value: "all", label: "الكل" }]} />
       <div className="mb-3 space-y-2">
         <div className="flex gap-2"><Input aria-label="البحث في طلبات البوت" placeholder="رقم الطلب أو الحوالة أو اسم العميل" value={search} onChange={(e) => setSearch(e.target.value)} /><Button size="icon" variant="outline" aria-label="تحديث الطلبات" title="تحديث الطلبات" onClick={() => void qc.invalidateQueries({ queryKey: ["wa-items"] })}><RefreshCw className="size-4" /></Button></div>
@@ -143,6 +149,7 @@ function Items() {
                 </div>
                 {i.duplicate_note && <p className="mt-1 text-xs text-muted-foreground">{i.duplicate_note}</p>}
                 {d.text && <p className="mt-1 rounded-lg bg-muted px-2 py-1 text-xs">{d.text}</p>}
+                <PostingActions item={i} />
                 {i.status === "pending" && (
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <Button size="sm" disabled={m.isPending} onClick={() => m.mutate({ id: i.id, approve: true })}>اعتماد</Button>
@@ -347,46 +354,199 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
   );
 }
 
-function Messages() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["wa-messages"],
+type PostableItem = { id: number; kind: string; status: string; posted_id: number | null; posted_table: string | null };
+
+/** «فتح للحفظ»: يفتح شاشة قبض/توريد الحوالة معبّأة من الطلب؛ الحفظ الفعلي من الشاشة المعتادة. */
+function PostingActions({ item }: { item: PostableItem }) {
+  if (item.posted_id != null) {
+    const dir = item.posted_table === "outgoing_transfers" ? "outgoing" : "incoming";
+    return <div className="mt-2 flex items-center gap-2 text-xs"><StatusPill tone="ok">محفوظة كحوالة {dir === "outgoing" ? "صادرة" : "واردة"}</StatusPill><Link className="text-primary underline" to="/transfers" search={{ dir }}>عرض الحوالات</Link></div>;
+  }
+  if (!canOpenForPosting(item)) return null;
+  const suggested = suggestedDirection(item.kind);
+  return (
+    <div className="mt-2 grid grid-cols-2 gap-2">
+      {(["incoming", "outgoing"] as const).map((dir) => (
+        <Button key={dir} size="sm" variant={suggested === dir ? "default" : "outline"} asChild>
+          <Link to="/transfers" search={{ dir, wa: item.id }}><FileSearch className="size-4" />فتح للحفظ {dir === "incoming" ? "كواردة" : "كصادرة"}</Link>
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+/** عمليات للمراجعة: لصق إشعار وتحليله، وقائمة الحوالات المقروءة التي لم تُحفظ بعد. */
+function Review() {
+  const qc = useQueryClient();
+  const analyzeFn = useServerFn(analyzeWaNotice);
+  const [text, setText] = useState("");
+  const [image, setImage] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  const [kind, setKind] = useState("all");
+  const [source, setSource] = useState("all");
+  const [showPosted, setShowPosted] = useState(false);
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["wa-items", "review", showPosted],
     queryFn: async () => {
-      const [m, s] = await Promise.all([
-        supabase.from("wa_messages").select("id, direction, phone, body, msg_type, send_state, send_error, wa_message_id, created_at, wa_contacts(display_name)").order("id", { ascending: false }).limit(100),
-        supabase.from("wa_message_statuses").select("wa_message_id, status").limit(1000),
-      ]);
-      if (m.error) throw m.error;
-      const rank: Record<string, number> = { sent: 1, delivered: 2, read: 3, failed: 4 };
-      const latest = new Map<string, string>();
-      for (const r of s.data ?? []) {
-        const cur = latest.get(r.wa_message_id);
-        if (!cur || (rank[r.status] ?? 0) > (rank[cur] ?? 0)) latest.set(r.wa_message_id, r.status);
-      }
-      return m.data.map((r) => ({ ...r, delivery: r.wa_message_id ? latest.get(r.wa_message_id) : undefined }));
+      let q = supabase.from("wa_items").select("*, wa_contacts(display_name, phone, role)").in("kind", ["transfer_notice", "transfer"]).order("id", { ascending: false }).limit(200);
+      q = showPosted ? q.not("posted_id", "is", null) : q.is("posted_id", null).in("status", ["pending", "approved"]);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data;
     },
     refetchInterval: 20000,
   });
-  const DELIVERY: Record<string, string> = { accepted: "أُرسلت", sent: "أُرسلت", delivered: "وصلت", read: "قُرئت", failed: "فشلت", sending: "قيد الإرسال", unknown: "غير مؤكد" };
-  if (isLoading) return <LoadingRows rows={4} />;
-  if (!data?.length) return <EmptyState icon={Bot} title="لا توجد رسائل بعد" hint="تظهر هنا رسائل واتساب الواردة والصادرة." />;
+  const run = useMutation({
+    mutationFn: async () => {
+      if (!text.trim() && !image) throw new Error("الصق نص الإشعار أو اختر صورته");
+      return analyzeFn({ data: { text: text.trim(), image, requestId } });
+    },
+    onSuccess: (r) => {
+      toast.success(r.status === "duplicate" ? "الحوالة مسجلة مسبقًا؛ لم تُفتح عملية مكررة." : r.status === "rejected" ? "ليست عملية مالية." : `حُلّل الإشعار وأُضيف للمراجعة برقم #${r.id}`);
+      setText(""); setImage(null); setRequestId(crypto.randomUUID());
+      void qc.invalidateQueries({ queryKey: ["wa-items"] });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const pickImage = (file: File | undefined) => {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) { toast.error("اختر صورة PNG أو JPG"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("الصورة أكبر من 5 ميجابايت"); return; }
+    const r = new FileReader();
+    r.onload = () => setImage(typeof r.result === "string" ? r.result : null);
+    r.readAsDataURL(file);
+  };
+  const rows = data.filter((i) => (kind === "all" || i.kind === kind) && (source === "all" || i.source_role === source));
   return (
-    <ul className="space-y-1.5">
-      {data.map((r) => (
-        <ListItem key={r.id} className={r.direction === "out" ? "bg-primary/5" : ""}>
-          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>{r.direction === "in" ? "وارد من" : "صادر إلى"} {r.wa_contacts?.display_name || <span dir="ltr" className="ledger-figures">+{r.phone}</span>}</span>
-            <span className="ledger-figures">{new Date(r.created_at).toLocaleString("ar-YE-u-nu-latn", { dateStyle: "short", timeStyle: "short" })}</span>
+    <>
+      <FormCard onSubmit={(e) => { e.preventDefault(); run.mutate(); }}>
+        <Field label="الصق إشعارًا واحدًا للتحليل"><Textarea rows={4} maxLength={4000} value={text} onChange={(e) => setText(e.target.value)} placeholder="نص إشعار الحوالة كما وصل من الصراف أو العميل" /></Field>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"><ImageIcon className="size-4" />{image ? "تغيير الصورة" : "صورة الإشعار (اختياري)"}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => pickImage(e.target.files?.[0])} /></label>
+          {image && <Button type="button" size="sm" variant="ghost" onClick={() => setImage(null)}>إزالة الصورة</Button>}
+          <Button type="submit" className="ms-auto" disabled={run.isPending}><Sparkles className="size-4" />{run.isPending ? "جارٍ التحليل…" : "تحليل"}</Button>
+        </div>
+        {image && <img src={image} alt="صورة الإشعار المختارة" className="max-h-48 rounded-lg border border-border object-contain" />}
+      </FormCard>
+      <div className="mb-3 mt-4 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold">{showPosted ? "سجل الحفظ" : "عمليات للمراجعة"} <span className="ledger-figures text-muted-foreground">({rows.length})</span></h2>
+        <Button size="sm" variant="outline" onClick={() => setShowPosted((v) => !v)}>{showPosted ? "عمليات للمراجعة" : "سجل الحفظ"}</Button>
+      </div>
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <select aria-label="نوع العملية" className={selectCls} value={kind} onChange={(e) => setKind(e.target.value)}><option value="all">كل الأنواع</option><option value="transfer_notice">{KIND_LABELS["transfer_notice"]}</option><option value="transfer">{KIND_LABELS["transfer"]}</option></select>
+        <select aria-label="مصدر العملية" className={selectCls} value={source} onChange={(e) => setSource(e.target.value)}><option value="all">كل المصادر</option>{Object.entries(ROLE_LABELS).filter(([k]) => k !== "owner").map(([k, label]) => <option key={k} value={k}>{label}</option>)}</select>
+      </div>
+      {error ? <Notice tone="warn">تعذّر تحميل العمليات: {error.message}</Notice> : isLoading ? <LoadingRows rows={3} /> : rows.length === 0 ? (
+        <EmptyState icon={FileSearch} title={showPosted ? "لا توجد عمليات محفوظة بعد" : "لا توجد عمليات للمراجعة"} hint="تظهر هنا الحوالات التي قرأها البوت من الإشعارات قبل حفظها." />
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((i) => {
+            const d = i.data as { sender?: string | null; receiver?: string | null };
+            const s = STATUS[i.status] ?? { label: i.status, tone: "neutral" as const };
+            return (
+              <ListItem key={i.id}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold"><span className="ledger-figures">#{i.id}</span> {KIND_LABELS[i.kind] ?? i.kind}{i.amount != null && <> · <span className="ledger-figures">{Number(i.amount).toLocaleString("en-US")}</span> {i.currency ?? "عملة غير محددة"}</>}</div>
+                    <div className="text-xs text-muted-foreground">{i.wa_contacts?.display_name || ROLE_LABELS[i.source_role] || i.source_role} · <span className="ledger-figures">{new Date(i.created_at).toLocaleString("ar-YE-u-nu-latn", { dateStyle: "short", timeStyle: "short" })}</span></div>
+                  </div>
+                  <StatusPill tone={s.tone}>{s.label}</StatusPill>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  {d.sender && <span>المرسل: {d.sender}</span>}
+                  {d.receiver && <span>المستلم: {d.receiver}</span>}
+                  {i.transfer_number && <span>رقم الحوالة: <span className="ledger-figures">{i.transfer_number}</span></span>}
+                </div>
+                {(!i.amount || !i.currency) && !showPosted && <p className="mt-1 text-xs text-destructive">ناقص: {[!i.amount && "المبلغ", !i.currency && "العملة"].filter(Boolean).join(" و")} — أكمله في شاشة الحفظ.</p>}
+                <PostingActions item={i} />
+              </ListItem>
+            );
+          })}
+        </ul>
+      )}
+    </>
+  );
+}
+
+/** الوارد: سجل رسائل واتساب الواردة مع حالة المطابقة وفتح الإشعار وصورته. */
+function Inbox() {
+  const [search, setSearch] = useState("");
+  const [match, setMatch] = useState<"all" | "matched" | "review">("all");
+  const [openId, setOpenId] = useState<number | null>(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["wa-inbox"],
+    queryFn: async () => {
+      const { data: msgs, error } = await supabase.from("wa_messages").select("id, phone, body, msg_type, media_id, wa_message_id, created_at, wa_contacts(display_name, role)").eq("direction", "in").order("id", { ascending: false }).limit(200);
+      if (error) throw error;
+      const ids = msgs.map((m) => m.wa_message_id).filter((v): v is string => !!v);
+      const items = ids.length ? await supabase.from("wa_items").select("id, inbound_message_id, kind, status, summary, amount, currency, transfer_number, posted_id, posted_table").in("inbound_message_id", ids) : { data: [], error: null };
+      if (items.error) throw items.error;
+      const byMsg = new Map((items.data ?? []).map((i) => [i.inbound_message_id, i]));
+      return msgs.map((m) => ({ ...m, item: m.wa_message_id ? byMsg.get(m.wa_message_id) : undefined }));
+    },
+    refetchInterval: 20000,
+  });
+  const q = search.trim();
+  const rows = (data ?? []).filter((m) => (match === "all" || inboxMatch(m.item) === match) && (!q || [m.body, m.phone, m.wa_contacts?.display_name].some((v) => String(v ?? "").includes(q))));
+  const open = (data ?? []).find((m) => m.id === openId) ?? null;
+  return (
+    <>
+      <div className="mb-3 space-y-2">
+        <div className="flex gap-2"><div className="relative flex-1"><Search className="absolute end-3 top-3 size-4 text-muted-foreground" /><Input aria-label="البحث في الوارد" className="pe-10" placeholder="بحث في النص أو المرسل أو القناة" value={search} onChange={(e) => setSearch(e.target.value)} /></div><Button size="icon" variant="outline" aria-label="تحديث الوارد" title="تحديث الوارد" onClick={() => void refetch()}><RefreshCw className="size-4" /></Button></div>
+        <Segments<"all" | "matched" | "review"> value={match} onChange={setMatch} options={[{ value: "all", label: "الكل" }, { value: "matched", label: "تمت المطابقة" }, { value: "review", label: "تحتاج مراجعة" }]} />
+      </div>
+      {error ? <Notice tone="warn">تعذّر تحميل الوارد: {error.message}</Notice> : isLoading ? <LoadingRows rows={4} /> : rows.length === 0 ? (
+        <EmptyState icon={Bot} title="لا توجد رسائل واردة" hint="تظهر هنا كل رسالة تصل للبوت من الصرافين والعملاء والمالك." />
+      ) : (
+        <ul className="space-y-1.5">
+          {rows.map((m) => (
+            <ListItem key={m.id}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold">{m.wa_contacts?.display_name || <span dir="ltr" className="ledger-figures">+{m.phone}</span>}</div>
+                  <div className="text-xs text-muted-foreground">{m.wa_contacts ? ROLE_LABELS[m.wa_contacts.role] ?? m.wa_contacts.role : "رقم غير مسجل"}{m.item ? ` · ${KIND_LABELS[m.item.kind] ?? m.item.kind}` : ""}</div>
+                </div>
+                <StatusPill tone={m.item ? "ok" : "warn"}>{m.item ? "تمت المطابقة" : "تحتاج مراجعة"}</StatusPill>
+              </div>
+              <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm">{m.body || (m.media_id ? "[صورة]" : `(${m.msg_type})`)}</p>
+              <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span className="ledger-figures">{new Date(m.created_at).toLocaleString("ar-YE-u-nu-latn", { dateStyle: "short", timeStyle: "short" })}</span>
+                <Button size="sm" variant="ghost" onClick={() => setOpenId(m.id)}><FileSearch className="size-4" />فتح الإشعار</Button>
+              </div>
+            </ListItem>
+          ))}
+        </ul>
+      )}
+      <Dialog open={open != null} onOpenChange={(v) => { if (!v) setOpenId(null); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          {open && <InboxDetail msg={open} />}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function InboxDetail({ msg }: { msg: { id: number; phone: string; body: string | null; media_id: string | null; created_at: string; wa_contacts: { display_name: string; role: string } | null; item?: (PostableItem & { summary: string; amount: number | null; currency: string | null; transfer_number: string | null }) | undefined } }) {
+  const imageFn = useServerFn(getWaMessageImage);
+  const img = useMutation({ mutationFn: () => imageFn({ data: { id: msg.id } }), onError: (e) => toast.error(e.message) });
+  const s = msg.item ? STATUS[msg.item.status] : undefined;
+  return (
+    <>
+      <DialogHeader><DialogTitle>{msg.wa_contacts?.display_name || `+${msg.phone}`}</DialogTitle></DialogHeader>
+      <div className="space-y-3 text-sm">
+        <div className="text-xs text-muted-foreground"><span dir="ltr" className="ledger-figures">+{msg.phone}</span> · <span className="ledger-figures">{new Date(msg.created_at).toLocaleString("ar-YE-u-nu-latn", { dateStyle: "short", timeStyle: "short" })}</span></div>
+        {msg.body && <p className="whitespace-pre-line rounded-lg bg-muted px-3 py-2">{msg.body}</p>}
+        {msg.item ? (
+          <div className="rounded-lg border border-border p-3">
+            <div className="flex items-center justify-between gap-2"><span className="font-semibold"><span className="ledger-figures">#{msg.item.id}</span> {KIND_LABELS[msg.item.kind] ?? msg.item.kind}</span>{s && <StatusPill tone={s.tone}>{s.label}</StatusPill>}</div>
+            {msg.item.summary && <p className="mt-1 text-xs">{msg.item.summary}</p>}
+            <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">{msg.item.amount != null && <span className="ledger-figures">{Number(msg.item.amount).toLocaleString("en-US")} {msg.item.currency}</span>}{msg.item.transfer_number && <span>رقم الحوالة: <span className="ledger-figures">{msg.item.transfer_number}</span></span>}</div>
+            <PostingActions item={msg.item} />
           </div>
-          <p className="mt-1 whitespace-pre-line text-sm">{r.body || (r.msg_type === "image" ? "📷 صورة" : `(${r.msg_type})`)}</p>
-          {r.direction === "out" && (
-            <div className="mt-1 text-[11px] text-muted-foreground">
-              {DELIVERY[r.delivery ?? r.send_state ?? ""] ?? r.send_state}
-              {r.send_error && <span className="text-destructive"> — {r.send_error.slice(0, 160)}</span>}
-            </div>
-          )}
-        </ListItem>
-      ))}
-    </ul>
+        ) : <Notice tone="warn">لم يقرأ البوت هذه الرسالة كطلب. إن كانت إشعار حوالة، الصقها في «عمليات للمراجعة».</Notice>}
+        {msg.media_id && (img.data ? <img src={img.data.dataUrl} alt="صورة الإشعار" className="w-full rounded-lg border border-border object-contain" /> : <Button variant="outline" className="w-full" disabled={img.isPending} onClick={() => img.mutate()}><ImageIcon className="size-4" />{img.isPending ? "جارٍ تحميل الصورة…" : "عرض صورة الإشعار"}</Button>)}
+      </div>
+    </>
   );
 }
 

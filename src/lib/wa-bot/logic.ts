@@ -135,3 +135,47 @@ export function withinServiceWindow(lastInboundIso: string | null | undefined, n
   const t = Date.parse(lastInboundIso);
   return Number.isFinite(t) && nowMs - t < 24 * 3600e3;
 }
+
+export type TransferDirection = "incoming" | "outgoing";
+
+/**
+ * الاتجاه المقترح عند فتح طلب البوت للحفظ: طلب العميل إرسال حوالة = صادرة،
+ * وإشعار الصراف أو طلب استلام حوالة = واردة. الموظف يستطيع تغييره قبل الحفظ.
+ */
+export function suggestedDirection(kind: string): TransferDirection | null {
+  if (kind === "transfer") return "outgoing";
+  if (kind === "transfer_notice") return "incoming";
+  return null;
+}
+
+/** يمكن فتح الطلب للحفظ مرة واحدة فقط: حوالة غير محفوظة، معلقة أو معتمدة. */
+export function canOpenForPosting(i: { kind: string; status: string; posted_id: number | null }): boolean {
+  return suggestedDirection(i.kind) !== null && i.posted_id == null && (i.status === "pending" || i.status === "approved");
+}
+
+const CURRENCY_HINTS: Array<[RegExp, RegExp]> = [
+  [/دولار|usd|\$/i, /دولار|usd/i],
+  [/سعود|sar/i, /سعود|sar/i],
+  [/يمن|yer/i, /يمن|yer/i],
+  [/درهم|aed/i, /درهم|aed/i],
+  [/يورو|eur/i, /يورو|eur/i],
+];
+
+/** يطابق اسم العملة الذي قرأه البوت مع عملات النظام؛ لا يخمّن إن لم يجد تطابقًا واضحًا. */
+export function matchCurrencyId(name: string | null | undefined, currencies: ReadonlyArray<{ id: number; currency_name: string }>): number | null {
+  const n = (name ?? "").trim();
+  if (!n) return null;
+  const exact = currencies.find((c) => c.currency_name.trim() === n);
+  if (exact) return exact.id;
+  for (const [hint, target] of CURRENCY_HINTS) {
+    if (!hint.test(n)) continue;
+    const hits = currencies.filter((c) => target.test(c.currency_name));
+    if (hits.length === 1) return hits[0]!.id;
+  }
+  return null;
+}
+
+/** حالة رسالة واردة في «الوارد»: تمت المطابقة إن قرأها البوت كطلب، وإلا تحتاج مراجعة. */
+export function inboxMatch(item: { status: string } | undefined): "matched" | "review" {
+  return item ? "matched" : "review";
+}

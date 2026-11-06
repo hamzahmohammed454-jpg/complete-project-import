@@ -3489,6 +3489,10 @@ export type Database = {
           id: number
           inbound_message_id: string
           kind: string
+          posted_at: string | null
+          posted_by: string | null
+          posted_id: number | null
+          posted_table: string | null
           source_role: string
           status: string
           summary: string
@@ -3508,6 +3512,10 @@ export type Database = {
           id?: number
           inbound_message_id: string
           kind: string
+          posted_at?: string | null
+          posted_by?: string | null
+          posted_id?: number | null
+          posted_table?: string | null
           source_role: string
           status?: string
           summary?: string
@@ -3527,6 +3535,10 @@ export type Database = {
           id?: number
           inbound_message_id?: string
           kind?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          posted_id?: number | null
+          posted_table?: string | null
           source_role?: string
           status?: string
           summary?: string
@@ -3820,6 +3832,10 @@ export type Database = {
       issue_activation_code: { Args: { p_until?: string }; Returns: Json }
       license_status: { Args: never; Returns: Json }
       license_writes_allowed: { Args: never; Returns: boolean }
+      link_wa_item_transfer: {
+        Args: { p_item: number; p_table: string; p_transfer: number }
+        Returns: undefined
+      }
       lock_staff_session: { Args: never; Returns: undefined }
       management_alerts: { Args: { p_date: string }; Returns: Json }
       next_account_number: { Args: { p_father: number }; Returns: number }

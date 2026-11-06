@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { botGate, coerceAnalysis, customerKindAllowed, needsOwnerApproval, normalizePhone, parseOwnerCommand, routeToOwners, withinServiceWindow } from "./logic";
+import { botGate, canOpenForPosting, coerceAnalysis, matchCurrencyId, suggestedDirection, customerKindAllowed, needsOwnerApproval, normalizePhone, parseOwnerCommand, routeToOwners, withinServiceWindow } from "./logic";
 
 describe("normalizePhone", () => {
   it("adds Yemen code to local mobile numbers", () => {
@@ -78,5 +78,30 @@ describe("withinServiceWindow", () => {
   it("blocks free replies after 24 hours or with no inbound message", () => {
     expect(withinServiceWindow("2026-11-03T19:59:00Z", now)).toBe(false);
     expect(withinServiceWindow(null, now)).toBe(false);
+  });
+});
+
+describe("فتح طلب البوت للحفظ", () => {
+  it("طلب إرسال حوالة يُفتح صادرة، وإشعار الصراف يُفتح واردة", () => {
+    expect(suggestedDirection("transfer")).toBe("outgoing");
+    expect(suggestedDirection("transfer_notice")).toBe("incoming");
+    expect(suggestedDirection("deposit")).toBeNull();
+  });
+  it("لا يُفتح للحفظ مرة ثانية بعد ربطه بحوالة", () => {
+    expect(canOpenForPosting({ kind: "transfer", status: "pending", posted_id: null })).toBe(true);
+    expect(canOpenForPosting({ kind: "transfer", status: "approved", posted_id: 15 })).toBe(false);
+  });
+  it("لا يُفتح الطلب المكرر أو المرفوض", () => {
+    expect(canOpenForPosting({ kind: "transfer_notice", status: "duplicate", posted_id: null })).toBe(false);
+    expect(canOpenForPosting({ kind: "transfer_notice", status: "rejected", posted_id: null })).toBe(false);
+  });
+  it("يطابق العملة بالاسم ولا يخمّن عند الغموض", () => {
+    const cur = [{ id: 1, currency_name: "ريال يمني" }, { id: 2, currency_name: "ريال سعودي" }, { id: 3, currency_name: "دولار أمريكي" }];
+    expect(matchCurrencyId("دولار", cur)).toBe(3);
+    expect(matchCurrencyId("USD", cur)).toBe(3);
+    expect(matchCurrencyId("سعودي", cur)).toBe(2);
+    expect(matchCurrencyId("ريال يمني", cur)).toBe(1);
+    expect(matchCurrencyId("ريال", cur)).toBeNull();
+    expect(matchCurrencyId(null, cur)).toBeNull();
   });
 });
