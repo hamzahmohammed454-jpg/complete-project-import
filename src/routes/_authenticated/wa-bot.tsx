@@ -214,7 +214,7 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
   });
   const route = useMutation({
     mutationFn: async (v: { id: number; kinds: string[] }) => {
-      if (!(await confirmAsk("حفظ توجيه الطلبات لهذا الرقم؟"))) return false;
+      if (!(await confirmAsk("حفظ توجيه الطلبات لهذا الرقم؟"))) return;
       const { error } = await supabase.from("wa_contacts").update({ notify_kinds: v.kinds }).eq("id", v.id);
       if (error) throw error;
     },
@@ -223,7 +223,7 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
   });
   const toggle = useMutation({
     mutationFn: async (v: { id: number; active: boolean }) => {
-      if (!(await confirmAsk(v.active ? "تفعيل هذا الرقم؟" : "إيقاف التعامل مع هذا الرقم؟"))) return false;
+      if (!(await confirmAsk(v.active ? "تفعيل هذا الرقم؟" : "إيقاف التعامل مع هذا الرقم؟"))) return;
       const { error } = await supabase.from("wa_contacts").update({ active: v.active }).eq("id", v.id);
       if (error) throw error;
     },
