@@ -52,7 +52,7 @@ function WaBotScreen() {
       <SectionIntro title="بوت واتساب" subtitle="وسيط بين النظام ورسائل الصرافين والعملاء: يقرأ، يطابق، ويجهّز العملية لتحفظها بنفسك" />
       <div className="mb-3 overflow-x-auto">
         <Segments<Tab>
-          className="min-w-[30rem]"
+          className="mb-0 min-w-[36rem]"
           value={tab}
           onChange={setTab}
           options={[
