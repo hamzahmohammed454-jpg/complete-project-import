@@ -420,7 +420,6 @@ function TransferForm({ dir, onDone, waItemId }: { dir: Direction; onDone: () =>
       receiver: d.receiver ?? p.receiver,
       reference: waItem.transfer_number ?? p.reference,
       agent_id: contact?.role === "exchanger" && contact.agent_id ? String(contact.agent_id) : p.agent_id,
-      ...(dir === "outgoing" && contact?.role === "customer" && contact.customer_id ? { method: "account", customer_id: String(contact.customer_id) } : {}),
       notes: [`من بوت واتساب #${waItem.id}`, waItem.summary].filter(Boolean).join(" — ").slice(0, 300),
     }));
   }, [waItem, waApplied, currencies, defaults?.enforce_currency, dir]);
@@ -547,6 +546,9 @@ function TransferForm({ dir, onDone, waItemId }: { dir: Direction; onDone: () =>
         <div className="w-40"><Field label="التاريخ"><Input required type="date" value={f.date} onChange={set("date")} /></Field></div>
       </div>
       <InputSettings />
+      {waItemId != null && (waItem?.posted_id != null
+        ? <Notice tone="warn">طلب البوت #{waItemId} محفوظ كحوالة مسبقًا؛ لا تحفظه مرة أخرى.</Notice>
+        : <Notice>معبّأ من طلب بوت واتساب <span className="ledger-figures">#{waItemId}</span>{waItem?.wa_contacts?.display_name ? ` (${waItem.wa_contacts.display_name})` : ""}. راجع المبلغ والعملة والأسماء ثم احفظ.</Notice>)}
 
       <FormGroup title="الحوالة">
         <div className="grid grid-cols-2 gap-2">
