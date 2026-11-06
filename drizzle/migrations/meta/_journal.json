@@ -78,6 +78,13 @@
       "when": 1793823813543,
       "tag": "0010_wa_bot_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793980801989,
+      "tag": "0011_wa_items_posting_link",
+      "breakpoints": true
     }
   ]
 }
