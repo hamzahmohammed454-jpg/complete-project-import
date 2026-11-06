@@ -419,7 +419,7 @@ function Review() {
   const rows = data.filter((i) => (kind === "all" || i.kind === kind) && (source === "all" || i.source_role === source));
   return (
     <>
-      <FormCard confirm={false} onSubmit={(e) => { e.preventDefault(); run.mutate(); }}>
+      <FormCard onSubmit={(e) => { e.preventDefault(); run.mutate(); }}>
         <Field label="الصق إشعارًا واحدًا للتحليل"><Textarea rows={4} maxLength={4000} value={text} onChange={(e) => setText(e.target.value)} placeholder="نص إشعار الحوالة كما وصل من الصراف أو العميل" /></Field>
         <div className="flex flex-wrap items-center gap-2">
           <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"><ImageIcon className="size-4" />{image ? "تغيير الصورة" : "صورة الإشعار (اختياري)"}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => pickImage(e.target.files?.[0])} /></label>
@@ -457,7 +457,7 @@ function Review() {
                   {d.receiver && <span>المستلم: {d.receiver}</span>}
                   {i.transfer_number && <span>رقم الحوالة: <span className="ledger-figures">{i.transfer_number}</span></span>}
                 </div>
-                {(!i.amount || !i.currency) && !showPosted && <p className="mt-1 text-xs text-warning">ناقص: {[!i.amount && "المبلغ", !i.currency && "العملة"].filter(Boolean).join(" و")} — أكمله في شاشة الحفظ.</p>}
+                {(!i.amount || !i.currency) && !showPosted && <p className="mt-1 text-xs text-destructive">ناقص: {[!i.amount && "المبلغ", !i.currency && "العملة"].filter(Boolean).join(" و")} — أكمله في شاشة الحفظ.</p>}
                 <PostingActions item={i} />
               </ListItem>
             );
