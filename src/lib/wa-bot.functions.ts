@@ -1,7 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 /** المدير يرد على محادثة واتساب من داخل النظام (خلال نافذة الـ٢٤ ساعة فقط). */
 export const sendWaChatMessage = createServerFn({ method: "POST" })
@@ -64,7 +67,7 @@ export const decideWaItem = createServerFn({ method: "POST" })
   });
 
 /** المدير فقط، والجلسة مفتوحة والتحقق بخطوتين مستوفى. */
-async function requireBotManager(context: { supabase: import("@supabase/supabase-js").SupabaseClient<import("@/integrations/supabase/types").Database>; userId: string }) {
+async function requireBotManager(context: { supabase: SupabaseClient<Database>; userId: string }) {
   const [a, m, s, f] = await Promise.all([
     context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
     context.supabase.rpc("has_role", { _user_id: context.userId, _role: "manager" }),
