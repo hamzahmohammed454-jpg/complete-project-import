@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, Pencil, Search, Trash2 } from "lucide-react";
+import { Bot, Pencil, Search, Trash2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -69,6 +69,9 @@ function WaBotScreen() {
 
 function Items() {
   const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [kindFilter, setKindFilter] = useState("all");
   const decide = useServerFn(decideWaItem);
   const [filter, setFilter] = useState<"pending" | "all">("pending");
   const { data = [], isLoading } = useQuery({
@@ -104,13 +107,17 @@ function Items() {
     <>
       <Notice className="mb-3">الاعتماد هنا موافقة فقط؛ تسجيل الحوالة أو السند الفعلي يتم من شاشته المعتادة بنفس البيانات.</Notice>
       <Segments<"pending" | "all"> value={filter} onChange={setFilter} options={[{ value: "pending", label: "المعلقة" }, { value: "all", label: "الكل" }]} />
+      <div className="mb-3 space-y-2">
+        <div className="flex gap-2"><Input aria-label="البحث في طلبات البوت" placeholder="رقم الطلب أو الحوالة أو اسم العميل" value={search} onChange={(e) => setSearch(e.target.value)} /><Button size="icon" variant="outline" aria-label="تحديث الطلبات" title="تحديث الطلبات" onClick={() => void qc.invalidateQueries({ queryKey: ["wa-items"] })}><RefreshCw className="size-4" /></Button></div>
+        <div className="grid grid-cols-2 gap-2"><select className={selectCls} aria-label="نوع الطلب" value={kindFilter} onChange={(e) => setKindFilter(e.target.value)}><option value="all">كل أنواع الطلبات</option>{Object.entries(KIND_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select><select className={selectCls} aria-label="حالة الطلب" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); if (e.target.value !== "pending") setFilter("all"); }}><option value="all">كل الحالات</option>{Object.entries(STATUS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}</select></div>
+      </div>
       {isLoading ? (
         <LoadingRows rows={3} />
       ) : data.length === 0 ? (
         <EmptyState icon={Bot} title="لا توجد طلبات" hint="تظهر هنا رسائل الصرافين والعملاء بعد قراءتها." />
       ) : (
         <ul className="space-y-2">
-          {data.map((i) => {
+          {data.filter((i) => (kindFilter === "all" || i.kind === kindFilter) && (statusFilter === "all" || i.status === statusFilter) && (!search.trim() || [i.id, i.transfer_number, i.summary, i.wa_contacts?.display_name, i.wa_contacts?.phone].some((v) => String(v ?? "").includes(search.trim())))).map((i) => {
             const d = i.data as { sender?: string | null; receiver?: string | null; text?: string };
             const s = STATUS[i.status] ?? { label: i.status, tone: "neutral" as const };
             return (
@@ -449,12 +456,16 @@ function Controls({ canEdit }: { canEdit: boolean }) {
       <div className="grid grid-cols-3 gap-2 border-b border-border pb-3">
         {(["exchanger", "customer", "owner"] as const).map((role) => <div key={role} className="min-w-0 text-center"><div className="text-xs text-muted-foreground">{ROLE_LABELS[role]}</div><div className="ledger-figures text-lg font-semibold">{contacts.data?.filter((c) => c.role === role && c.active).length ?? "—"}</div><StatusPill tone={data && botGate(data, role) === "ok" ? "ok" : "neutral"}>{data && botGate(data, role) === "ok" ? "مفعّل" : "موقوف"}</StatusPill></div>)}
       </div>
+      <ul className="space-y-2" aria-label="فئات تشغيل البوت">
+        {([{ role: "exchanger", key: "exchangers_enabled", title: "بوت الصرافين والوكلاء" }, { role: "customer", key: "customers_enabled", title: "بوت العملاء" }, { role: "owner", key: "owners_enabled", title: "بوت المالك" }] as const).map((category) => <ListItem key={category.role}>
+          <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{category.title}</h3><Switch aria-label={category.title} checked={form[category.key]} disabled={!canEdit || !form.enabled} onCheckedChange={(value) => set(category.key, value)} /></div>
+          <div className="mt-2 text-xs text-muted-foreground">الأرقام المفعّلة: <span className="ledger-figures">{contacts.data?.filter((contact) => contact.role === category.role && contact.active).length ?? "—"}</span></div>
+          <p className="mt-1 break-words text-xs">{contacts.data?.filter((contact) => contact.role === category.role && contact.active).map((contact) => contact.display_name || `+${contact.phone}`).join("، ") || "لا توجد أرقام مفعّلة"}</p>
+        </ListItem>)}
+      </ul>
       {!canEdit && <Notice tone="warn">تعديل الإعدادات للمدير العام فقط.</Notice>}
       <ul className="divide-y divide-border">
         {row("enabled", "تشغيل البوت", "إيقافه يرد على الجميع برسالة الإيقاف ولا يعالج شيئًا")}
-        {row("exchangers_enabled", "فئة الصرافين والوكلاء", "قراءة إشعارات الحوالات ومنع تكرارها")}
-        {row("customers_enabled", "فئة العملاء", "استقبال طلبات الإيداع والسحب والحوالات")}
-        {row("owners_enabled", "فئة المالك", "إرسال الطلبات للاعتماد وتنفيذ أوامر المالك")}
         {row("read_images", "قراءة الصور", "تحليل صور الإشعارات والسندات بالذكاء الاصطناعي")}
         {row("auto_ack", "رد الاستلام التلقائي", "إبلاغ المرسل برقم طلبه فور وصوله")}
         {row("reply_unregistered", "الرد على الأرقام غير المسجلة", "إرسال رسالة التسجيل لأي رقم غير مربوط")}
