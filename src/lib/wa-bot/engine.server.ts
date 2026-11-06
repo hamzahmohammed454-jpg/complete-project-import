@@ -66,7 +66,7 @@ export async function sendOnce(admin: Admin, opts: { to: string; body: string; r
 }
 
 /** ينزّل وسائط واتساب بحد أقصى للحجم ويعيدها كرابط بيانات للصور. */
-async function downloadMedia(mediaId: string): Promise<{ dataUrl: string; mime: string } | null> {
+export async function downloadMedia(mediaId: string): Promise<{ dataUrl: string; mime: string } | null> {
   const meta = await fetch(`${GATEWAY_URL}/media/${encodeURIComponent(mediaId)}`, { headers: keys() });
   if (!meta.ok) throw new Error(`Media lookup failed [${meta.status}]: ${await meta.text()}`);
   const info = (await meta.json()) as { url?: string; mime_type?: string; file_size?: number };
@@ -103,7 +103,7 @@ currency: العملة (ريال يمني، ريال سعودي، دولار...)
 sender: اسم المرسل إن وُجد، receiver: اسم المستلم إن وُجد.
 لا تخترع أي رقم غير موجود في الرسالة.`;
 
-async function analyze(text: string, image: string | null): Promise<Analysis> {
+export async function analyze(text: string, image: string | null): Promise<Analysis> {
   const content: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [
     { type: "text", text: text || "(بلا نص)" },
   ];
@@ -125,7 +125,7 @@ async function analyze(text: string, image: string | null): Promise<Analysis> {
   }
 }
 
-async function findDuplicate(admin: Admin, num: string, selfMessageId: string): Promise<string | null> {
+export async function findDuplicate(admin: Admin, num: string, selfMessageId: string): Promise<string | null> {
   const { data: prev, error } = await admin
     .from("wa_items")
     .select("id")
