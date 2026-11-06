@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, Trash2 } from "lucide-react";
+import { Bot, Pencil, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,7 +16,7 @@ import { EmptyState, Field, FormCard, ListItem, LoadingRows, Notice, Segments, s
 import { useAppRoles } from "@/hooks/use-app-roles";
 import { supabase } from "@/integrations/supabase/client";
 import { decideWaItem } from "@/lib/wa-bot.functions";
-import { KIND_LABELS, normalizePhone } from "@/lib/wa-bot/logic";
+import { botGate, KIND_LABELS, normalizePhone, routeToOwners } from "@/lib/wa-bot/logic";
 
 export const Route = createFileRoute("/_authenticated/wa-bot")({
   head: () => ({
@@ -43,12 +43,12 @@ const STATUS: Record<string, { label: string; tone: "neutral" | "ok" | "warn" | 
 
 function WaBotScreen() {
   const { isManager, isAdmin } = useAppRoles();
-  const [tab, setTab] = useState<Tab>("items");
+  const [tab, setTab] = useState<Tab>("controls");
   if (!isManager && !isAdmin) return <Notice tone="warn">هذه الشاشة للمدير فقط.</Notice>;
   return (
     <>
       <MenuStrip tab="/administration" />
-      <SectionIntro title="بوت واتساب" subtitle="يقرأ إشعارات الصرافين وطلبات العملاء تلقائيًا، والمالك يعتمدها من واتساب أو من هنا." />
+      <SectionIntro title="بوت واتساب" subtitle="إعدادات التشغيل والأرقام ووجهات الطلبات" />
       <Segments<Tab>
         value={tab}
         onChange={setTab}
@@ -157,6 +157,11 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
   const [role, setRole] = useState<"exchanger" | "customer" | "owner">("customer");
   const [partyId, setPartyId] = useState("");
   const [name, setName] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [stateFilter, setStateFilter] = useState("all");
+  const reset = () => { setEditingId(null); setPhone(""); setPartyId(""); setName(""); };
 
   const contacts = useQuery({
     queryKey: ["wa-contacts-bot"],
@@ -187,24 +192,29 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
       if (!/^\d{8,15}$/.test(p)) throw new Error("رقم الجوال غير صحيح");
       const party = parties.data?.find((x) => String(x.id) === partyId);
       if (role !== "owner" && !party) throw new Error(role === "customer" ? "اختر حساب العميل" : "اختر حساب الصراف/الوكيل");
-      const { error } = await supabase.from("wa_contacts").insert({
+      const values = {
         phone: p,
         role,
-        customer_id: role === "customer" ? party!.id : null,
-        agent_id: role === "exchanger" ? party!.id : null,
+        customer_id: role === "customer" ? party?.id ?? null : null,
+        agent_id: role === "exchanger" ? party?.id ?? null : null,
         display_name: name.trim() || party?.name || "المالك",
-      });
+      };
+      const q = editingId === null
+        ? supabase.from("wa_contacts").insert(values)
+        : supabase.from("wa_contacts").update(values).eq("id", editingId);
+      const { error } = await q.select("id").single();
       if (error) throw new Error(error.code === "23505" ? "هذا الرقم مربوط مسبقًا" : error.message);
     },
     onSuccess: () => {
-      toast.success("تم ربط الرقم");
-      setPhone(""); setPartyId(""); setName("");
+      toast.success(editingId === null ? "تم ربط الرقم" : "حُفظ تعديل الرقم");
+      reset();
       void qc.invalidateQueries({ queryKey: ["wa-contacts-bot"] });
     },
     onError: (e) => toast.error(e.message),
   });
   const route = useMutation({
     mutationFn: async (v: { id: number; kinds: string[] }) => {
+      if (!(await confirmAsk("حفظ توجيه الطلبات لهذا الرقم؟"))) return;
       const { error } = await supabase.from("wa_contacts").update({ notify_kinds: v.kinds }).eq("id", v.id);
       if (error) throw error;
     },
@@ -213,6 +223,7 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
   });
   const toggle = useMutation({
     mutationFn: async (v: { id: number; active: boolean }) => {
+      if (!(await confirmAsk(v.active ? "تفعيل هذا الرقم؟" : "إيقاف التعامل مع هذا الرقم؟"))) return;
       const { error } = await supabase.from("wa_contacts").update({ active: v.active }).eq("id", v.id);
       if (error) throw error;
     },
@@ -233,8 +244,9 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
     <>
       {canEdit && (
         <FormCard onSubmit={(e) => { e.preventDefault(); add.mutate(); }}>
+          <h2 className="text-sm font-semibold">{editingId === null ? "ربط رقم جديد" : "تعديل الرقم"}</h2>
           <Field label="نوع الرقم">
-            <select className={selectCls} value={role} onChange={(e) => { setRole(e.target.value as typeof role); setPartyId(""); }}>
+            <select className={selectCls} value={role} disabled={editingId !== null} onChange={(e) => { setRole(e.target.value as typeof role); setPartyId(""); }}>
               <option value="customer">عميل — يرسل طلباته</option>
               <option value="exchanger">صراف / وكيل — يرسل إشعارات الحوالات</option>
               <option value="owner">المالك — يعتمد ويرسل الأوامر</option>
@@ -248,7 +260,7 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
                 onChange={(e) => {
                   setPartyId(e.target.value);
                   const p = parties.data?.find((x) => String(x.id) === e.target.value);
-                  if (p?.phone && !phone) setPhone(p.phone);
+                  if (p?.phone) setPhone(p.phone);
                 }}
               >
                 <option value="">— اختر —</option>
@@ -262,19 +274,29 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
           <Field label="اسم يظهر في الرسائل (اختياري)">
             <Input value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
-          <Button type="submit" className="w-full" disabled={add.isPending}>ربط الرقم</Button>
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1" disabled={add.isPending}>{editingId === null ? "ربط الرقم" : "حفظ التعديل"}</Button>
+            {editingId !== null && <Button variant="outline" type="button" disabled={add.isPending} onClick={reset}>إلغاء</Button>}
+          </div>
         </FormCard>
       )}
       <h2 className="mb-2 mt-4 text-sm font-semibold">الأرقام المربوطة</h2>
-      <Notice className="mb-2">لكل رقم مالك اختر أنواع الطلبات التي تصله للاعتماد. النوع الذي لا يختاره أي مالك يصل لكل المالكين.</Notice>
+      <div className="mb-3 flex flex-col gap-2">
+        <div className="relative"><Search className="absolute end-3 top-3 size-4 text-muted-foreground" /><Input aria-label="البحث في الأرقام" className="pe-10" placeholder="الاسم أو رقم واتساب" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+        <div className="grid grid-cols-2 gap-2">
+          <select aria-label="تصفية نوع الرقم" className={selectCls} value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}><option value="all">كل الفئات</option>{Object.entries(ROLE_LABELS).map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select>
+          <select aria-label="تصفية حالة الرقم" className={selectCls} value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}><option value="all">كل الحالات</option><option value="active">مفعّل</option><option value="paused">موقوف</option></select>
+        </div>
+      </div>
+      {contacts.isError && <Notice tone="warn">تعذّر تحميل الأرقام: {contacts.error.message}</Notice>}
       {contacts.isLoading ? (
         <LoadingRows rows={3} />
       ) : !contacts.data?.length ? (
         <EmptyState icon={Bot} title="لا توجد أرقام مربوطة" hint="اربط رقم المالك أولًا، ثم أرقام الصرافين والعملاء." />
       ) : (
         <ul className="space-y-2">
-          {contacts.data.map((c) => (
-            <ListItem key={c.id} className="flex items-center justify-between gap-2">
+          {contacts.data.filter((c) => (roleFilter === "all" || c.role === roleFilter) && (stateFilter === "all" || c.active === (stateFilter === "active")) && (!search.trim() || (c.display_name ?? "").includes(search.trim()) || c.phone.includes(normalizePhone(search)) && /[0-9٠-٩]/.test(search))).map((c) => (
+            <ListItem key={c.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <div className="text-sm font-semibold">{c.display_name || "—"}</div>
                 <div className="text-xs text-muted-foreground">
@@ -285,27 +307,28 @@ function Contacts({ canEdit }: { canEdit: boolean }) {
                     {ROUTABLE.map((k) => {
                       const on = c.notify_kinds.includes(k);
                       return (
-                        <button
+                        <Button size="sm" variant={on ? "default" : "outline"}
                           key={k}
                           type="button"
                           disabled={!canEdit || route.isPending}
                           aria-pressed={on}
                           onClick={() => route.mutate({ id: c.id, kinds: on ? c.notify_kinds.filter((x) => x !== k) : [...c.notify_kinds, k] })}
-                          className={`rounded-full border px-2 py-0.5 text-[11px] ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+                          className="h-auto min-h-8 whitespace-normal px-2 py-1 text-xs"
                         >
                           {KIND_LABELS[k]}
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <StatusPill tone={c.active ? "ok" : "neutral"}>{c.active ? "مفعّل" : "موقوف"}</StatusPill>
                 {canEdit && (
                   <>
-                    <Button size="sm" variant="outline" onClick={() => toggle.mutate({ id: c.id, active: !c.active })}>{c.active ? "إيقاف" : "تفعيل"}</Button>
-                    <Button size="icon" variant="ghost" aria-label="فك الربط" onClick={() => del.mutate(c.id)}><Trash2 className="size-4" /></Button>
+                    <Switch aria-label={`تفعيل ${c.display_name || c.phone}`} checked={c.active} disabled={toggle.isPending} onCheckedChange={(active) => toggle.mutate({ id: c.id, active })} />
+                    <Button size="icon" variant="ghost" aria-label={`تعديل ${c.display_name || c.phone}`} title="تعديل الرقم" onClick={() => { setEditingId(c.id); setRole(c.role as typeof role); setPartyId(String(c.customer_id ?? c.agent_id ?? "")); setName(c.display_name ?? ""); setPhone(c.phone); window.scrollTo({ top: 0, behavior: "smooth" }); }}><Pencil className="size-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="فك الربط" title="فك الربط" disabled={del.isPending} onClick={() => del.mutate(c.id)}><Trash2 className="size-4" /></Button>
                   </>
                 )}
               </div>
@@ -378,7 +401,7 @@ type SettingsForm = {
 
 function Controls({ canEdit }: { canEdit: boolean }) {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["wa-bot-settings"],
     queryFn: async () => {
       const { data, error } = await supabase.from("wa_bot_settings").select("*").eq("id", 1).maybeSingle();
@@ -386,9 +409,14 @@ function Controls({ canEdit }: { canEdit: boolean }) {
       return data;
     },
   });
+  const contacts = useQuery({ queryKey: ["wa-contacts-bot"], queryFn: async () => {
+    const { data, error } = await supabase.from("wa_contacts").select("*").order("display_name");
+    if (error) throw error;
+    return data;
+  } });
   const [form, setForm] = useState<SettingsForm | null>(null);
   useEffect(() => {
-    if (data) setForm({ ...data, customer_kinds: [...data.customer_kinds] });
+    if (data) setForm({ enabled: data.enabled, exchangers_enabled: data.exchangers_enabled, customers_enabled: data.customers_enabled, owners_enabled: data.owners_enabled, read_images: data.read_images, reply_unregistered: data.reply_unregistered, auto_ack: data.auto_ack, customer_kinds: [...data.customer_kinds], unregistered_text: data.unregistered_text, paused_text: data.paused_text });
   }, [data]);
   const save = useMutation({
     mutationFn: async () => {
@@ -402,7 +430,9 @@ function Controls({ canEdit }: { canEdit: boolean }) {
     },
     onError: (e) => toast.error(e.message),
   });
-  if (isLoading || !form) return <LoadingRows rows={4} />;
+  if (isLoading) return <LoadingRows rows={4} />;
+  if (error) return <Notice tone="warn">تعذّر تحميل الإعدادات: {error.message}</Notice>;
+  if (!form) return <Notice tone="warn">إعدادات البوت غير موجودة.</Notice>;
   const set = <K extends keyof SettingsForm>(k: K, v: SettingsForm[K]) => setForm({ ...form, [k]: v });
   const row = (k: "enabled" | "exchangers_enabled" | "customers_enabled" | "owners_enabled" | "read_images" | "reply_unregistered" | "auto_ack", label: string, hint: string) => (
     <li className="flex items-center justify-between gap-3 py-2">
@@ -415,6 +445,10 @@ function Controls({ canEdit }: { canEdit: boolean }) {
   );
   return (
     <FormCard onSubmit={(e) => { e.preventDefault(); if (canEdit) save.mutate(); }}>
+      <div className="flex items-center justify-between gap-2"><h2 className="font-semibold">حالة البوت</h2><StatusPill tone={data?.enabled ? "ok" : "neutral"}>{data?.enabled ? "مفعّل" : "موقوف"}</StatusPill></div>
+      <div className="grid grid-cols-3 gap-2 border-b border-border pb-3">
+        {(["exchanger", "customer", "owner"] as const).map((role) => <div key={role} className="min-w-0 text-center"><div className="text-xs text-muted-foreground">{ROLE_LABELS[role]}</div><div className="ledger-figures text-lg font-semibold">{contacts.data?.filter((c) => c.role === role && c.active).length ?? "—"}</div><StatusPill tone={data && botGate(data, role) === "ok" ? "ok" : "neutral"}>{data && botGate(data, role) === "ok" ? "مفعّل" : "موقوف"}</StatusPill></div>)}
+      </div>
       {!canEdit && <Notice tone="warn">تعديل الإعدادات للمدير العام فقط.</Notice>}
       <ul className="divide-y divide-border">
         {row("enabled", "تشغيل البوت", "إيقافه يرد على الجميع برسالة الإيقاف ولا يعالج شيئًا")}
@@ -430,27 +464,34 @@ function Controls({ canEdit }: { canEdit: boolean }) {
           {CUSTOMER_KINDS.map((k) => {
             const on = form.customer_kinds.includes(k);
             return (
-              <button
+              <Button size="sm" variant={on ? "default" : "outline"}
                 key={k}
                 type="button"
                 disabled={!canEdit}
                 aria-pressed={on}
                 onClick={() => set("customer_kinds", on ? form.customer_kinds.filter((x) => x !== k) : [...form.customer_kinds, k])}
-                className={`rounded-full border px-2.5 py-1 text-xs ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+                className="h-auto min-h-9 whitespace-normal text-xs"
               >
                 {KIND_LABELS[k]}
-              </button>
+              </Button>
             );
           })}
         </div>
       </Field>
       <Field label="رسالة الرقم غير المسجل">
-        <Textarea rows={2} value={form.unregistered_text} disabled={!canEdit} onChange={(e) => set("unregistered_text", e.target.value)} />
+        <Textarea rows={2} maxLength={500} value={form.unregistered_text} disabled={!canEdit} onChange={(e) => set("unregistered_text", e.target.value)} />
       </Field>
       <Field label="رسالة الإيقاف المؤقت">
-        <Textarea rows={2} value={form.paused_text} disabled={!canEdit} onChange={(e) => set("paused_text", e.target.value)} />
+        <Textarea rows={2} maxLength={500} value={form.paused_text} disabled={!canEdit} onChange={(e) => set("paused_text", e.target.value)} />
       </Field>
-      {canEdit && <Button type="submit" className="w-full" disabled={save.isPending}>حفظ الإعدادات</Button>}
+      <h3 className="text-sm font-semibold">وجهات الطلبات</h3>
+      {contacts.isError ? <Notice tone="warn">تعذّر تحميل وجهات الطلبات.</Notice> : <ul className="divide-y divide-border">{ROUTABLE.map((kind) => {
+        const owners = (contacts.data ?? []).filter((c) => c.role === "owner" && c.active);
+        const destinations = routeToOwners(owners, kind);
+        const active = form.enabled && form.owners_enabled;
+        return <li key={kind} className="py-2 text-sm"><div className="font-medium">{KIND_LABELS[kind]}</div><p className="mt-1 break-words text-xs text-muted-foreground">{!active ? "توجيه المالك موقوف" : !destinations.length ? "لا يوجد رقم مالك مفعّل" : destinations.map((c) => c.display_name || `+${c.phone}`).join("، ")}</p></li>;
+      })}</ul>}
+      {canEdit && <Button type="submit" className="w-full" disabled={save.isPending || Boolean(data && Object.keys(form).every((key) => JSON.stringify(form[key as keyof SettingsForm]) === JSON.stringify(data[key as keyof SettingsForm])))}>{save.isPending ? "جارٍ الحفظ…" : "حفظ الإعدادات"}</Button>}
     </FormCard>
   );
 }
