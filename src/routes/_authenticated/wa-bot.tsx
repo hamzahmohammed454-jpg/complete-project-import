@@ -457,11 +457,11 @@ function Controls({ canEdit }: { canEdit: boolean }) {
         {(["exchanger", "customer", "owner"] as const).map((role) => <div key={role} className="min-w-0 text-center"><div className="text-xs text-muted-foreground">{ROLE_LABELS[role]}</div><div className="ledger-figures text-lg font-semibold">{contacts.data?.filter((c) => c.role === role && c.active).length ?? "—"}</div><StatusPill tone={data && botGate(data, role) === "ok" ? "ok" : "neutral"}>{data && botGate(data, role) === "ok" ? "مفعّل" : "موقوف"}</StatusPill></div>)}
       </div>
       <ul className="space-y-2" aria-label="فئات تشغيل البوت">
-        {([{ role: "exchanger", key: "exchangers_enabled", title: "بوت الصرافين والوكلاء" }, { role: "customer", key: "customers_enabled", title: "بوت العملاء" }, { role: "owner", key: "owners_enabled", title: "بوت المالك" }] as const).map((category) => <ListItem key={category.role}>
+        {([{ role: "exchanger", key: "exchangers_enabled", title: "بوت الصرافين والوكلاء" }, { role: "customer", key: "customers_enabled", title: "بوت العملاء" }, { role: "owner", key: "owners_enabled", title: "بوت المالك" }] as const).map((category) => <li key={category.role} className="border-b border-border py-3">
           <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{category.title}</h3><Switch aria-label={category.title} checked={form[category.key]} disabled={!canEdit || !form.enabled} onCheckedChange={(value) => set(category.key, value)} /></div>
           <div className="mt-2 text-xs text-muted-foreground">الأرقام المفعّلة: <span className="ledger-figures">{contacts.data?.filter((contact) => contact.role === category.role && contact.active).length ?? "—"}</span></div>
           <p className="mt-1 break-words text-xs">{contacts.data?.filter((contact) => contact.role === category.role && contact.active).map((contact) => contact.display_name || `+${contact.phone}`).join("، ") || "لا توجد أرقام مفعّلة"}</p>
-        </ListItem>)}
+        </li>)}
       </ul>
       {!canEdit && <Notice tone="warn">تعديل الإعدادات للمدير العام فقط.</Notice>}
       <ul className="divide-y divide-border">
