@@ -174,6 +174,7 @@ function AuthScreen() {
               {!busy && <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />}
             </Button>
           </form>
+          {!needsSetup && <Button variant="link" className="mt-2 w-full" onClick={() => navigate({ to: "/reset-password" })}>تعيين كلمة مرور بعد استعادة الحساب</Button>}
         </div>
 
         <div className="mt-5 flex items-start gap-2.5 rounded-2xl border border-dashed border-border bg-paper px-4 py-3">
